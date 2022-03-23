@@ -29,6 +29,7 @@
         "@bmll/dd-api": "c:\\Users\\wenju\\Documents\\projects\\bmll-viz-labs\\dd-api\\dist",
         "antd": "^4.19.3",
         "aws-amplify": "^4.3.16",
+        "lightweight-charts": "^3.8.0",
         "loglevel": "^1.8.0"
     },
     "devDependencies": {

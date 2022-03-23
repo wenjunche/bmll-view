@@ -40,3 +40,8 @@ export async function getToken(): Promise<string> {
     const session = await Auth.currentSession().catch(() => undefined);
     return session?.getIdToken()?.getJwtToken() || '';
 }
+
+export async function isAuthenticated(): Promise<boolean> {
+    const user = await getUser();
+    return !!user;
+}

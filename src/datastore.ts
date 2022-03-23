@@ -9,6 +9,11 @@ import {
 import { getToken } from './auth';
 import log from 'loglevel';
 
+export interface TradingViewData {
+    time: string;
+    value: number;
+}
+
 const handleAxiosError = async (error: Error) => {
     log.error('handling Axios Error', error)
     throw error;
@@ -45,7 +50,7 @@ export const getSecurityMetrics = async (
     listing: Listing,
     dates: string[],
     metricFrequency = 'D'
-): Promise<ListingMetric[]> => {
+): Promise<TradingViewData[]> => {
     const metricNames = ["TradeNotional|Lit"];
     const [startDate, endDate] = dates;
 
@@ -63,7 +68,7 @@ export const getSecurityMetrics = async (
         metric: metrics,
     });
 
-    return  apiclient.timeseries.query({
+    const series = await apiclient.timeseries.query({
         objectId: listingIds,
         startDate,
         endDate,
@@ -75,4 +80,34 @@ export const getSecurityMetrics = async (
         isoformat: true,
     });
 
+    return dataTransform(series);
 }
+
+export const getAllSecurityMetrics = async (listing: Listing[], dates: string[]): Promise<Array<TradingViewData[]>> => {
+    const requests: Array<Promise<TradingViewData[]>> = [];
+    listing.forEach(value => {
+        if (value.IsAlive) {
+            requests.push(getSecurityMetrics(value, dates));
+        }
+    });
+    const list: Array<TradingViewData[]> = await Promise.all(requests);
+    const result: Array<TradingViewData[]> = [];
+    list.forEach(item => {
+        if (checkMetrics(item)) {
+            result.push(item)
+        }
+    });
+    return result;
+}
+
+const checkMetrics = (listing: TradingViewData[]): boolean => {
+    return listing.filter(item => item.value > 0).length > 0;
+}
+
+const dataTransform = (dataInFigure: Array<ListingMetric>): Array<TradingViewData> => {
+    const newData = dataInFigure.map(item => { 
+        return {time: item.Date, value: item['Value']};
+     });
+     log.debug('TV data', newData);
+     return newData;
+};

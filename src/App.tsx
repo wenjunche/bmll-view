@@ -1,10 +1,11 @@
-import { configureAmplify } from './auth'
+import { configureAmplify, isAuthenticated } from './auth'
 import { Login } from './components/Login';
+import { PlotElement } from './components/PlotElement'
 import React from 'react';
 import { ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import log from 'loglevel';
 
-import { initApiClient, loadSecurityBySymbol, getSecurityMetrics } from './datastore';
+import { initApiClient, loadSecurityBySymbol, getAllSecurityMetrics, TradingViewData } from './datastore';
 
 log.setLevel('debug');
 
@@ -21,19 +22,52 @@ const getDateRange = () => {
     return [start.getFullYear()  + "-" + (start.getMonth()+1) + "-" + start.getDate(),
             end.getFullYear()  + "-" + (end.getMonth()+1) + "-" + end.getDate()]
 }
-const onLogin = async(me) => {
-    log.info('logged in as', me);
-    await initApiClient();
-    const listings = await loadSecurityBySymbol('VOD:XLON');
-    log.debug('got listings', listings);
-    // const listings2 = await getListings(listings[0]);
-    // log.debug('got listings2', listings2);
-    const listingMetric = await getSecurityMetrics(listings[0], ['2022-02-20', '2022-03-20']);
-    log.debug('listingMetric', listingMetric);
-}
 
 const App: React.FC = () => {
-    return (<Login onLogin={onLogin}></Login>);
+    const [isAuth, setIsAuth] = React.useState<boolean>(false);
+    const [metric, setMetric] = React.useState<Array<TradingViewData[]>>([]);
+
+    React.useEffect(() => {
+        const checkAuth = async() => {
+            setIsAuth(await isAuthenticated());
+        }
+        checkAuth();
+    }, []);
+
+    React.useEffect(() => {
+        if (isAuth) {
+            const retrieveData = async() => {
+                await initApiClient();
+                const listings = await loadSecurityBySymbol('VOD:XLON');
+                log.debug('got listings', listings);
+                const allMetric = await getAllSecurityMetrics(listings, ['2022-02-20', '2022-03-20']);
+                log.debug('allMetric', allMetric);
+                setMetric(allMetric);
+            }
+            retrieveData();
+        }
+    }, [isAuth]);
+
+    const onLogin = (me) => {
+        if (!!me) {
+            log.debug('logged in', me);
+            setIsAuth(true);
+        }
+    }
+
+    if (!isAuth) {
+        return (<Login onLogin={onLogin}></Login>);
+    } else if (metric.length > 0) {
+        return (
+            <div>
+                {metric.map(m => (
+                   <PlotElement figure={m}></PlotElement>
+                ))}
+            </div>
+        )
+    } else {
+        return (<div></div>);
+    }
 }
 
 export default App;
