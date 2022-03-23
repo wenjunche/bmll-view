@@ -5,7 +5,7 @@ import React from 'react';
 import { ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import log from 'loglevel';
 
-import { initApiClient, loadSecurityBySymbol, getAllSecurityMetrics, TradingViewData } from './datastore';
+import { initApiClient, loadSecurityBySymbol, getAllSecurityMetrics, TradingViewFigure } from './datastore';
 
 log.setLevel('debug');
 
@@ -25,7 +25,7 @@ const getDateRange = () => {
 
 const App: React.FC = () => {
     const [isAuth, setIsAuth] = React.useState<boolean>(false);
-    const [metric, setMetric] = React.useState<Array<TradingViewData[]>>([]);
+    const [metric, setMetric] = React.useState<Array<TradingViewFigure>>([]);
 
     React.useEffect(() => {
         const checkAuth = async() => {
@@ -61,7 +61,7 @@ const App: React.FC = () => {
         return (
             <div>
                 {metric.map(m => (
-                   <PlotElement figure={m}></PlotElement>
+                   <PlotElement key={m.symbol} figure={m}></PlotElement>
                 ))}
             </div>
         )

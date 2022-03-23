@@ -5,11 +5,12 @@ import {
     ListingMetric
 } from '@bmll/dd-api';
 
-import { createChart, ChartOptions, ColorType, LineStyle, IChartApi, ISeriesApi, PriceScaleMode, SeriesType } from 'lightweight-charts';
+import { createChart, ChartOptions, ColorType, LineStyle, IChartApi, ISeriesApi, SeriesType } from 'lightweight-charts';
+import { TradingViewFigure } from 'datastore';
 
 var darkTheme:ChartOptions = {
     height: 300,
-    width: 900,
+    width: 700,
     layout: {
         background: { type: ColorType.Solid, color: '#2B2B43'},
         backgroundColor: '#2B2B43',
@@ -63,15 +64,15 @@ const min = (data: Array<any>) => {
 
 export interface PlotElementProps {
     title?: string;
-    figure: TradingViewData[];
+    figure: TradingViewFigure;
 }
 
 export const PlotElement:React.FC<PlotElementProps> = (props: PlotElementProps) => {
     const chartDiv = React.createRef<HTMLDivElement>();
-    const [data, setData] = React.useState([]);
+    const legendDiv = React.createRef<HTMLDivElement>();
+    const [figure, setFigure] = React.useState<TradingViewFigure>();
     const [chart, setChart] = React.useState<IChartApi>();
     const [series, setSeries] = React.useState<ISeriesApi<SeriesType>[]>([]);
-    const { figure } = props;
 
     React.useEffect(() => {
         if (chartDiv.current != null) {
@@ -82,12 +83,11 @@ export const PlotElement:React.FC<PlotElementProps> = (props: PlotElementProps) 
     }, []);
 
     React.useEffect(() => {
-        // @ts-ignore
-        setData(figure);
+        setFigure(props.figure);
     }, [figure]);
 
     React.useEffect(() => {
-        if (chartDiv.current && data.length > 0 && chart) {
+        if (chartDiv.current && legendDiv.current && figure && figure.data.length > 0 && chart) {
             series.forEach(serie => chart?.removeSeries(serie));
             const newSeries:Array<ISeriesApi<SeriesType>> = [];
             const areaSeries = chart.addAreaSeries({
@@ -96,25 +96,23 @@ export const PlotElement:React.FC<PlotElementProps> = (props: PlotElementProps) 
                 lineColor: '#8C61FF',
                 lineWidth: 1,
             });
-            areaSeries.setData(data);
+            areaSeries.setData(figure.data);
             areaSeries.priceScale().applyOptions({ borderVisible: false });
             areaSeries.applyOptions({ priceLineVisible: false});
             chart.timeScale().fitContent();
             newSeries.push(areaSeries);
             setSeries(newSeries);
+            legendDiv.current.innerText = figure.symbol;
         }
-    }, [data]);
+    }, [figure]);
 
 
     return (
-        <div ref={chartDiv} style={{ position: "relative" }}>
-            <div
-                style={{
-                    position: "absolute",
-                    zIndex: 2,
-                    padding: 10,
-                }}
-            />
+        <div>
+            <div ref={legendDiv} style={ {position: 'relative', height: '30px', left: '10px', zIndex: 2, color: 'white'} }>
+            </div>
+            <div ref={chartDiv} style={{ position: "relative", top: '-30px' }}>
+            </div>
         </div>
     );
 };

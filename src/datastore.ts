@@ -9,10 +9,16 @@ import {
 import { getToken } from './auth';
 import log from 'loglevel';
 
-export interface TradingViewData {
+export interface TradingViewDataPoint {
     time: string;
     value: number;
 }
+
+export interface TradingViewFigure {
+    symbol: string;
+    data: Array<TradingViewDataPoint>
+}
+
 
 const handleAxiosError = async (error: Error) => {
     log.error('handling Axios Error', error)
@@ -50,7 +56,7 @@ export const getSecurityMetrics = async (
     listing: Listing,
     dates: string[],
     metricFrequency = 'D'
-): Promise<TradingViewData[]> => {
+): Promise<TradingViewFigure> => {
     const metricNames = ["TradeNotional|Lit"];
     const [startDate, endDate] = dates;
 
@@ -80,18 +86,21 @@ export const getSecurityMetrics = async (
         isoformat: true,
     });
 
-    return dataTransform(series);
+    return {
+        symbol: listing.symbol,
+        data: dataTransform(series)
+    }
 }
 
-export const getAllSecurityMetrics = async (listing: Listing[], dates: string[]): Promise<Array<TradingViewData[]>> => {
-    const requests: Array<Promise<TradingViewData[]>> = [];
+export const getAllSecurityMetrics = async (listing: Listing[], dates: string[]): Promise<Array<TradingViewFigure>> => {
+    const requests: Array<Promise<TradingViewFigure>> = [];
     listing.forEach(value => {
         if (value.IsAlive) {
             requests.push(getSecurityMetrics(value, dates));
         }
     });
-    const list: Array<TradingViewData[]> = await Promise.all(requests);
-    const result: Array<TradingViewData[]> = [];
+    const list: Array<TradingViewFigure> = await Promise.all(requests);
+    const result: Array<TradingViewFigure> = [];
     list.forEach(item => {
         if (checkMetrics(item)) {
             result.push(item)
@@ -100,11 +109,11 @@ export const getAllSecurityMetrics = async (listing: Listing[], dates: string[])
     return result;
 }
 
-const checkMetrics = (listing: TradingViewData[]): boolean => {
-    return listing.filter(item => item.value > 0).length > 0;
+const checkMetrics = (figure: TradingViewFigure): boolean => {
+    return figure.data.filter(item => item.value > 0).length > 0;
 }
 
-const dataTransform = (dataInFigure: Array<ListingMetric>): Array<TradingViewData> => {
+const dataTransform = (dataInFigure: Array<ListingMetric>): Array<TradingViewDataPoint> => {
     const newData = dataInFigure.map(item => { 
         return {time: item.Date, value: item['Value']};
      });
