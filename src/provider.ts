@@ -47,7 +47,7 @@ async function createPageWithLayout(title: string, layout: LayoutExtended): Prom
 
 export async function createBrowserWindow(): Promise<BrowserWindowModule> {
   const platform: WorkspacePlatformModule = getCurrentSync();
-  const page: Page = await createPageWithLayout('Untitled Page', defaultPageLayout);
+  const page: Page = await createPageWithLayout('BMLL Demo', defaultPageLayout);
   const pages: Page[] = [page];
 
   const options: BrowserCreateWindowRequest = {
