@@ -5,12 +5,14 @@ const HtmlwebpackPlugin = require('html-webpack-plugin');
 module.exports = {
     mode: 'development',
     entry: {
-        index: './src/index.tsx'
+        index: './src/index.tsx',
+        provider: './src/provider.ts',
+        view: './src/view.tsx',
     },
     devtool: 'inline-source-map',
     output: {
         path: path.resolve(__dirname, 'dist'),
-        filename: 'bundle.js'
+        filename: '[name]-bundle.js'
     },
     module: {
         rules: [
@@ -34,14 +36,26 @@ module.exports = {
             template: 'res/index.html',
             filename: 'index.html',
             chunks: ['index']
+        }),
+        new HtmlwebpackPlugin({
+            title: 'OpenFin BMLL Provider',
+            template: 'res/provider.html',
+            filename: 'provider.html',
+            chunks: ['provider']
+        }),
+        new HtmlwebpackPlugin({
+            title: 'OpenFin BMLL View',
+            template: 'res/plotview.html',
+            filename: 'plotview.html',
+            chunks: ['view']
         })
     ],
     devServer: {
         static : {
-            directory : path.join(__dirname, 'dist')
+            directory : path.join(__dirname, 'res')
         },
         port: process.env.DEV_PORT,
         hot: true,
-        open: ['./index.html']
+        // open: ['./index.html']
     }
 };

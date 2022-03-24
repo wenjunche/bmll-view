@@ -9,8 +9,6 @@ import { createChart, ChartOptions, ColorType, LineStyle, IChartApi, ISeriesApi,
 import { TradingViewFigure } from 'datastore';
 
 var darkTheme:ChartOptions = {
-    height: 300,
-    width: 700,
     layout: {
         background: { type: ColorType.Solid, color: '#2B2B43'},
         backgroundColor: '#2B2B43',
@@ -72,40 +70,99 @@ export const PlotElement:React.FC<PlotElementProps> = (props: PlotElementProps) 
     const legendDiv = React.createRef<HTMLDivElement>();
     const [figure, setFigure] = React.useState<TradingViewFigure>();
     const [chart, setChart] = React.useState<IChartApi>();
-    const [series, setSeries] = React.useState<ISeriesApi<SeriesType>[]>([]);
+    const [series, setSeries] = React.useState<ISeriesApi<SeriesType>>();
+    const [bounds, setBounds] = React.useState();
 
     React.useEffect(() => {
-        if (chartDiv.current != null) {
-            const cc = createChart(chartDiv.current, darkTheme);
-            cc.timeScale().fitContent();
-            setChart(cc);
+        const updateBounds = async() => {
+            // @ts-ignore
+            const initBounds = await fin.me.getBounds();
+            log.debug('PlotElement:setBounds', initBounds);
+            setBounds(initBounds);
         }
+
+        updateBounds();
+        // @ts-ignore
+        fin.me.addListener('shown', () => {
+            log.debug('PlotElement:shown');
+            updateBounds();
+        });
+        window.addEventListener('resize', () => {
+            log.debug('PlotElement:resize');
+            updateBounds();
+        });        
+
+    }, []);
+    React.useEffect(() => {
+        log.debug('setting figure');
+        setFigure(props.figure);
     }, []);
 
-    React.useEffect(() => {
-        setFigure(props.figure);
-    }, [figure]);
 
     React.useEffect(() => {
-        if (chartDiv.current && legendDiv.current && figure && figure.data.length > 0 && chart) {
-            series.forEach(serie => chart?.removeSeries(serie));
-            const newSeries:Array<ISeriesApi<SeriesType>> = [];
-            const areaSeries = chart.addAreaSeries({
-                topColor: 'rgba(140, 97, 255, 0.3)',
-                bottomColor: 'rgba(140, 97, 255, 0)',
-                lineColor: '#8C61FF',
-                lineWidth: 1,
-            });
-            areaSeries.setData(figure.data);
-            areaSeries.priceScale().applyOptions({ borderVisible: false });
-            areaSeries.applyOptions({ priceLineVisible: false});
-            chart.timeScale().fitContent();
-            newSeries.push(areaSeries);
-            setSeries(newSeries);
-            legendDiv.current.innerText = figure.symbol;
+        const configChart = async() => {
+            if (chartDiv.current != null && bounds) {
+                if (!chart) {
+                    // @ts-ignore
+                    darkTheme.height = bounds.height;
+                    // @ts-ignore
+                    darkTheme.width  = bounds.width;
+                    log.debug('creating chart', darkTheme);
+                    const cc = createChart(chartDiv.current, darkTheme);
+                    setChart(cc);
+                }
+                if (chart && bounds) {
+                    // @ts-ignore
+                    chart.resize(bounds.width, bounds.height, true);
+                    chart.timeScale().fitContent();
+                }
+            } else {
+                log.debug('PlotElement:configChart', bounds);
+            }
         }
-    }, [figure]);
+        configChart();
+    }, [bounds]);
 
+
+    const updateFigure = React.useCallback(() => {
+        if (chartDiv.current && legendDiv.current && figure && figure.data.length > 0 && chart) {
+            if (!series) {
+                const areaSeries = chart.addAreaSeries({
+                    topColor: 'rgba(140, 97, 255, 0.3)',
+                    bottomColor: 'rgba(140, 97, 255, 0)',
+                    lineColor: '#8C61FF',
+                    lineWidth: 1,
+                });
+                areaSeries.setData(figure.data);
+                areaSeries.priceScale().applyOptions({ borderVisible: false });
+                areaSeries.applyOptions({ priceLineVisible: false});
+                chart.timeScale().fitContent();
+                setSeries(areaSeries);
+                legendDiv.current.innerText = figure.symbol;
+            }
+        } else {
+            log.debug('figure ready but no chart');
+        }
+    }, [chartDiv.current, legendDiv.current, figure, chart]);
+
+    React.useEffect(() => {
+        log.debug('updating figure');
+        updateFigure();
+    }, [chart, figure]);
+
+    React.useEffect(() => {
+        if (chartDiv.current) {
+            const observer = new ResizeObserver(() => {
+                if (chart && chartDiv.current) {
+                    chart.resize(chartDiv.current.clientWidth, chartDiv.current.clientHeight);
+                }
+            });
+            if (chart && chartDiv.current) {
+                chart.resize(chartDiv.current.clientWidth, chartDiv.current.clientHeight);
+            }
+        observer.observe(chartDiv.current);
+        }
+    }, [chartDiv.current]);
 
     return (
         <div>
