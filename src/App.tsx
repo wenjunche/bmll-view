@@ -9,7 +9,7 @@ import log from 'loglevel';
 import { fin } from 'openfin-adapter/src/mock';
 import { getCurrentSync, WorkspacePlatformModule } from '@openfin/workspace-platform';
 
-import { getAvailableMetrics, initApiClient, InstrumentFigure, getTimeSeries, dataJoin, loadSecurityByInstrument, TradingViewFigure, transformJoinedData } from './datastore';
+import { getAvailableMetrics, initApiClient, InstrumentFigure, getTimeSeries, dataJoin, loadSecurityByInstrument, getInstrumentFigure, transformJoinedData } from './datastore';
 
 log.setLevel('debug');
 
@@ -27,20 +27,22 @@ const getDateRange = () => {
             end.getFullYear()  + "-" + (end.getMonth()+1) + "-" + end.getDate()]
 }
 
-async function launchView(figure:InstrumentFigure, targetIdentity?: OpenFin.Identity){
-    const platform: WorkspacePlatformModule = getCurrentSync();
-    const viewOptions = { url: 'http://localhost:8081/plotview.html',
-                          customData: { figure: figure}
-                        };
+async function launchView(figure?:InstrumentFigure, targetIdentity?: OpenFin.Identity){
+    if (figure) {
+        const platform: WorkspacePlatformModule = getCurrentSync();
+        const viewOptions = { url: 'http://localhost:8081/plotview.html',
+                            customData: { figure: figure}
+                            };
 
-    log.debug('createView', viewOptions);
-    if (!targetIdentity) {
+        log.debug('createView', viewOptions);
+        if (!targetIdentity) {
+            // @ts-ignore
+            const w = await fin.me.getCurrentWindow();
+            targetIdentity = w.identity;
+        }
         // @ts-ignore
-        const w = await fin.me.getCurrentWindow();
-        targetIdentity = w.identity;
+        return platform.createView(viewOptions, targetIdentity);
     }
-    // @ts-ignore
-    return platform.createView(viewOptions, targetIdentity);
 }
 
 const retrieveData = async():Promise<InstrumentFigure | undefined> => {
@@ -61,19 +63,18 @@ const retrieveData = async():Promise<InstrumentFigure | undefined> => {
     log.debug('pySeries', pySeries);
     const joined = dataJoin(pyListing, pySeries);
     log.debug('joined', joined);
-    const plot = transformJoinedData(joined, ['TradeNotional|Dark', 'Spread|RelTWA']);
+    const plot = transformJoinedData(joined, metrics.map(m => m.field));
     log.debug('plot', plot);
 
-    if (plot.length > 0) {
-        plot.forEach((item, index) => {
-            if (index > 0) {
-                launchView(item);
-            }
-        })
-        return plot[0];
+    if (plot.size > 0) {
+        launchView(getInstrumentFigure(plot, 'FillProbability|1'));
+        launchView(getInstrumentFigure(plot, 'TWALiquidityAroundBBO|10bpsNotional'));
+        launchView(getInstrumentFigure(plot, 'TimeAtEBBO|Percentage'));
+        return getInstrumentFigure(plot, 'Spread|RelTWA');
     }
     return undefined;
 }
+
 
 const App: React.FC = () => {
     const [isAuth, setIsAuth] = React.useState<boolean>(false);

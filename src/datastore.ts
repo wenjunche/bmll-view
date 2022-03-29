@@ -26,6 +26,9 @@ export interface InstrumentFigure {
     data: Array<TradingViewFigure>;
 }
 
+export type TradomgViewDataMap = Map<string, TradingViewFigure>;  // MIC => TradingViewFigure
+export type InstrumentDataMap = Map<string, TradomgViewDataMap>;  // Metric => TradomgViewDataMap
+
 const excludedMics = new Set(['XEQT', 'BOTC', 'SGMX', 'SGMU']);
 
 const handleAxiosError = async (error: Error) => {
@@ -176,7 +179,7 @@ export const getTimeSeries = async (
         metric: metricNames
     });
 
-    const series = await apiclient.timeseries.query({
+    return await apiclient.timeseries.query({
         objectId: listingIds,
         startDate,
         endDate,
@@ -185,13 +188,6 @@ export const getTimeSeries = async (
         frequency: 'D',
         pivot: true
     });
-
-    return series;
-
-    // return {
-    //     symbol: listing.symbol,
-    //     data: dataTransform(series)
-    // }
 }
 
 type JoinedListingMetric = Listing & ListingMetric;
@@ -200,8 +196,8 @@ export const dataJoin = (listing: Listing[], listingMetric: ListingMetric[]): Ar
     return dataframeInnerJoin(listingMetric, listing, 'ObjectId', 'ListingId') as Array<JoinedListingMetric>;
 }
 
-export const transformJoinedData = (listing: Array<JoinedListingMetric>, metricList: Array<string>):Array<InstrumentFigure> => {
-    const map: Map<string, Map<string, TradingViewFigure>> = new Map();
+export const transformJoinedData = (listing: Array<JoinedListingMetric>, metricList: Array<string>):InstrumentDataMap => {
+    const map: InstrumentDataMap = new Map();
     metricList.forEach(metric => {
         listing.forEach(item => {
             let metricFeature = map.get(metric);
@@ -217,11 +213,46 @@ export const transformJoinedData = (listing: Array<JoinedListingMetric>, metricL
             micFeature.data.push({ time: item.Date, value: item[metric] })
         });    
     });
-    const result:Array<InstrumentFigure> = [];
-    map.forEach((value, key) => {
-        result.push( { metric: key, data: Array.from(value.values()) } );
-    });
-    return result;
+    generateCompositeSeries(map, 'TWALiquidityAroundBBO|10bpsNotional',  ['TWALiquidityAroundBBO|Ask10bpsNotional', 'TWALiquidityAroundBBO|Bid10bpsNotional']);
+    generateCompositeSeries(map, 'FillProbability|1',  ['FillProbability|Ask1', 'FillProbability|Bid1']);
+    // const result:Array<InstrumentFigure> = [];
+    // map.forEach((value, key) => {
+    //     result.push( { metric: key, data: Array.from(value.values()) } );
+    // });
+    // return result;
+    return map;
+}
+
+export const getInstrumentFigure = (map: InstrumentDataMap, metric: string):InstrumentFigure|undefined => {
+    const tvMap = map.get(metric);
+    if (tvMap) {
+        return { metric, data: Array.from(tvMap.values()) };
+    }
+}
+
+const generateCompositeSeries = (map: InstrumentDataMap, targetMetric: string, sourceMetric: string[]) => {
+    const [metric1, metric2] = sourceMetric;
+    const source1 = map.get(metric1);
+    const source2 = map.get(metric2);
+    const tvMap:TradomgViewDataMap = new Map();
+    if (source1 && source2) {
+        source1.forEach((tvFigure1, mic) => {
+            const tvFigure2 = source2.get(mic);
+            if (tvFigure1 && tvFigure2) {
+                const composite: TradingViewFigure = { symbol: mic, data: averageDataPoints(tvFigure1.data, tvFigure2.data) }
+                tvMap.set(mic, composite);
+            }
+        });    
+    }
+    map.set(targetMetric, tvMap);
+}
+
+const averageDataPoints = (list1: Array<TradingViewDataPoint>, list2: Array<TradingViewDataPoint>):Array<TradingViewDataPoint> => {
+    const result:Array<TradingViewDataPoint> = [];
+    return list1.map((point, index) => {
+        // assuming TradingViewDataPoint is sorted by time
+        return { time: point.time, value: (point.value + list2[index].value) / 2 };
+    })
 }
 
 const checkMetrics = (figure: TradingViewFigure): boolean => {
