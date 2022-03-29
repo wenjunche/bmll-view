@@ -33,7 +33,9 @@
         "aws-amplify": "^4.3.16",
         "lightweight-charts": "^3.8.0",
         "loglevel": "^1.8.0",
-        "openfin-adapter": "^24.68.14"
+        "openfin-adapter": "^24.68.14",
+        "react": "^18.0.0",
+        "react-dom": "^18.0.0"
     },
     "devDependencies": {
         "@types/react": "^17.0.41",
