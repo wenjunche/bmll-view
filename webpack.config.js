@@ -54,7 +54,7 @@ module.exports = {
         static : {
             directory : path.join(__dirname, 'res')
         },
-        port: process.env.DEV_PORT,
+        port: 8081,
         hot: true,
         // open: ['./index.html']
     }

@@ -1,11 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import { PlotElement } from './components/PlotElement'
+import { PlotLineElement } from './components/PlotLineElement'
 import log from 'loglevel';
 import { fin } from 'openfin-adapter/src/mock';
 
-import { TradingViewFigure } from './datastore';
+import { TradingViewFigure,InstrumentFigure } from './datastore';
 import './index.css';
 
 window.addEventListener("DOMContentLoaded",  async () => {
@@ -15,7 +15,7 @@ window.addEventListener("DOMContentLoaded",  async () => {
 log.setLevel('debug');
 
 const App: React.FC = () => {
-    const [figure, setFigure] = React.useState<TradingViewFigure>();
+    const [figure, setFigure] = React.useState<InstrumentFigure>();
 
     React.useEffect(() => {
             const retrieveData = async() => {
@@ -28,7 +28,7 @@ const App: React.FC = () => {
 
     if (figure && figure.data.length > 0) {
         return (
-            <PlotElement key={figure.symbol} figure={figure}></PlotElement>
+            <PlotLineElement key={figure.metric} figure={figure.data} title={figure.metric}></PlotLineElement>
         )
     } else {
         return (<div></div>);

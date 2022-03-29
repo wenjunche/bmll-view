@@ -1,14 +1,15 @@
 import { configureAmplify, isAuthenticated } from './auth'
 import { Login } from './components/Login';
 import { PlotElement } from './components/PlotElement'
+import { PlotLineElement, PlotLineElementProps } from './components/PlotLineElement'
 import React from 'react';
 import { ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import log from 'loglevel';
 
 import { fin } from 'openfin-adapter/src/mock';
-import { BrowserCreateWindowRequest, BrowserWindowModule, getCurrentSync, Page, PageWithUpdatableRuntimeAttribs, WorkspacePlatformModule, PageLayout } from '@openfin/workspace-platform';
+import { getCurrentSync, WorkspacePlatformModule } from '@openfin/workspace-platform';
 
-import { initApiClient, loadSecurityBySymbol, getAllSecurityMetrics, TradingViewFigure } from './datastore';
+import { getAvailableMetrics, initApiClient, InstrumentFigure, getTimeSeries, dataJoin, loadSecurityByInstrument, TradingViewFigure, transformJoinedData } from './datastore';
 
 log.setLevel('debug');
 
@@ -26,7 +27,7 @@ const getDateRange = () => {
             end.getFullYear()  + "-" + (end.getMonth()+1) + "-" + end.getDate()]
 }
 
-async function launchView(figure:TradingViewFigure, targetIdentity?: OpenFin.Identity){
+async function launchView(figure:InstrumentFigure, targetIdentity?: OpenFin.Identity){
     const platform: WorkspacePlatformModule = getCurrentSync();
     const viewOptions = { url: 'http://localhost:8081/plotview.html',
                           customData: { figure: figure}
@@ -42,25 +43,41 @@ async function launchView(figure:TradingViewFigure, targetIdentity?: OpenFin.Ide
     return platform.createView(viewOptions, targetIdentity);
 }
 
-const retrieveData = async() => {
+const retrieveData = async():Promise<InstrumentFigure | undefined> => {
     await initApiClient();
-    const listings = await loadSecurityBySymbol('VOD:XLON');
-    log.debug('got listings', listings);
-    const allMetric = await getAllSecurityMetrics(listings, ['2022-02-20', '2022-03-20']);
-    log.debug('allMetric', allMetric);
-    if (allMetric.length > 0) {
-        allMetric.forEach((figure, index) => {
+
+    const pyListing = await loadSecurityByInstrument({ISIN: 'GB00BH4HKS39', OPOL: 'XLON'});
+    console.log('pyListing', pyListing);
+    const metrics = await getAvailableMetrics([
+            { field: 'TWALiquidityAroundBBO', frequency: 'D', suffix: ['Ask10bpsNotional', 'Bid10bpsNotional'] },
+            { field: 'FillProbability',  frequency: 'D', level: 1 },
+            { field: 'TimeAtEBBO', frequency: 'D', suffix: ['Percentage']},
+            { field: 'Spread', frequency: 'D', suffix: ['RelTWA'] },
+            { field: 'TradeNotional', frequency: 'D'}
+        ]
+        );
+    console.log('metrics', metrics);
+    const pySeries = await getTimeSeries(pyListing, metrics, ['2022-02-28', '2022-03-28']);
+    log.debug('pySeries', pySeries);
+    const joined = dataJoin(pyListing, pySeries);
+    log.debug('joined', joined);
+    const plot = transformJoinedData(joined, ['TradeNotional|Dark', 'Spread|RelTWA']);
+    log.debug('plot', plot);
+
+    if (plot.length > 0) {
+        plot.forEach((item, index) => {
             if (index > 0) {
-                launchView(figure);
+                launchView(item);
             }
-        });
-        return allMetric[0];
+        })
+        return plot[0];
     }
+    return undefined;
 }
 
 const App: React.FC = () => {
     const [isAuth, setIsAuth] = React.useState<boolean>(false);
-    const [figure, setFigure] = React.useState<TradingViewFigure>();
+    const [figure, setFigure] = React.useState<InstrumentFigure>();
 
     React.useEffect(() => {
         const checkAuth = async() => {
@@ -92,7 +109,7 @@ const App: React.FC = () => {
         return (<Login onLogin={onLogin}></Login>);
     } else if (figure) {
         return (
-            <PlotElement key={figure.symbol} figure={figure}></PlotElement>
+            <PlotLineElement key={figure.metric} figure={figure.data} title={figure.metric} ></PlotLineElement>
         )
     } else {
         return (<div></div>);
