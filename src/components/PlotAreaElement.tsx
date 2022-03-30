@@ -1,7 +1,8 @@
 import log from 'loglevel';
 import React, { ReactNode, useRef } from 'react';
 
-import { createChart, ChartOptions, ColorType, LineStyle, IChartApi, ISeriesApi, PriceScaleMode, PriceFormat } from 'lightweight-charts';
+
+import { createChart, ChartOptions, ColorType, LineStyle, IChartApi, ISeriesApi, PriceFormat } from 'lightweight-charts';
 import { TradingViewFigure } from 'datastore';
 
 const darkTheme:ChartOptions = {
@@ -28,9 +29,7 @@ const darkTheme:ChartOptions = {
     // @ts-expect-error
     leftPriceScale: {
         borderVisible: false,
-        visible: true,
-        drawTicks: false,
-        mode: PriceScaleMode.Normal
+        visible: true
     },
     // @ts-expect-error
     rightPriceScale: {
@@ -45,19 +44,19 @@ const darkTheme:ChartOptions = {
 
 const lineColors = ['#8C61FF', '#FF8C4C', '#F4BF00', '#46C8F1', '#00CC88', '#FF5E60', '#FF8FB8', '#E9FF8F'];
 
-export interface PlotLineElementProps {
+export interface PlotAreaElementProps {
     title?: string;
     figure: Array<TradingViewFigure>;
     priceFormat?: PriceFormat
 }
 
-export const PlotLineElement:React.FC<PlotLineElementProps> = (props: PlotLineElementProps) => {
+export const PlotAreaElement:React.FC<PlotAreaElementProps> = (props: PlotAreaElementProps) => {
     const chartDiv = React.createRef<HTMLDivElement>();
     const legendDiv = React.createRef<HTMLDivElement>();
     const [title, setTitle] = React.useState<string>();
     const [figure, setFigure] = React.useState<Array<TradingViewFigure>>([]);
     const [chart, setChart] = React.useState<IChartApi>();
-    const [series, setSeries] = React.useState<Array<ISeriesApi<'Line'>>>([]);
+    const [series, setSeries] = React.useState<Array<ISeriesApi<'Area'>>>([]);
     const [bounds, setBounds] = React.useState();
 
     React.useEffect(() => {
@@ -116,25 +115,27 @@ export const PlotLineElement:React.FC<PlotLineElementProps> = (props: PlotLineEl
         if (chartDiv.current && legendDiv.current && figure && figure.length > 0 && chart) {
             if (!series.length) {
                 let colorIndex = 0;
-                const lineCharts: Array<ISeriesApi<'Line'>> = [];
+                const areaCharts: Array<ISeriesApi<'Area'>> = [];
                 const symbolList:Array<string> = [];
                 figure.forEach( plot => {
-                    const lineSeries = chart.addLineSeries({
-                        color: lineColors[colorIndex],
+                    const areaSeries = chart.addAreaSeries({
+                        topColor: lineColors[colorIndex],
+                        bottomColor: lineColors[colorIndex],
+                        lineColor: lineColors[colorIndex],
                         lineWidth: 1,
                     });
-                    lineSeries.setData(plot.data);
-                    lineSeries.priceScale().applyOptions({ borderVisible: false });
-                    lineSeries.applyOptions({ priceLineVisible: false, lastValueVisible: false, priceFormat: props.priceFormat});
+                    areaSeries.setData(plot.data);
+                    areaSeries.priceScale().applyOptions({ borderVisible: false });
+                    areaSeries.applyOptions({ priceLineVisible: false, lastValueVisible: false, priceFormat: props.priceFormat});
                     colorIndex += 1;
-                    lineCharts.push(lineSeries);
+                    areaCharts.push(areaSeries);
                     symbolList.push(plot.symbol);
                     if (colorIndex >= lineColors.length) {
                         log.warn('too many lines, too little color');
                     }
                 } );
                 chart.timeScale().fitContent();
-                setSeries(lineCharts);
+                setSeries(areaCharts);
                 legendDiv.current.innerText = `${title} (${symbolList.join(',')})`;
             }
         } else {
@@ -163,7 +164,7 @@ export const PlotLineElement:React.FC<PlotLineElementProps> = (props: PlotLineEl
 
     return (
         <div>
-            <div ref={legendDiv} style={ {position: 'relative', float: 'right', height: '30px', right: '10px', zIndex: 2, color: 'white'} }>
+            <div ref={legendDiv} style={ {position: 'relative', height: '30px', left: '10px', zIndex: 2, color: 'white'} }>
             </div>
             <div ref={chartDiv} style={{ position: "relative", top: '-30px' }}>
             </div>

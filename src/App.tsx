@@ -1,7 +1,7 @@
 import { configureAmplify, isAuthenticated } from './auth'
 import { Login } from './components/Login';
-import { PlotElement } from './components/PlotElement'
-import { PlotLineElement, PlotLineElementProps } from './components/PlotLineElement'
+import { PlotLineElement } from './components/PlotLineElement'
+import { PlotAreaElement } from './components/PlotAreaElement'
 import React from 'react';
 import { ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import log from 'loglevel';
@@ -27,11 +27,19 @@ const getDateRange = () => {
             end.getFullYear()  + "-" + (end.getMonth()+1) + "-" + end.getDate()]
 }
 
-async function launchView(figure?:InstrumentFigure, targetIdentity?: OpenFin.Identity){
+interface ChartViewOptions {
+    figure?: InstrumentFigure;
+    chartType: 'line' | 'area';
+    targetIdentity?: OpenFin.Identity,
+    priceFormat?: any
+}
+
+async function launchView(options: ChartViewOptions ) {
+    let { figure, chartType, targetIdentity, priceFormat } = options;
     if (figure) {
         const platform: WorkspacePlatformModule = getCurrentSync();
         const viewOptions = { url: 'http://localhost:8081/plotview.html',
-                            customData: { figure: figure}
+                            customData: { figure: figure, chartType, priceFormat }
                             };
 
         log.debug('createView', viewOptions);
@@ -67,9 +75,10 @@ const retrieveData = async():Promise<InstrumentFigure | undefined> => {
     log.debug('plot', plot);
 
     if (plot.size > 0) {
-        launchView(getInstrumentFigure(plot, 'FillProbability|1'));
-        launchView(getInstrumentFigure(plot, 'TWALiquidityAroundBBO|10bpsNotional'));
-        launchView(getInstrumentFigure(plot, 'TimeAtEBBO|Percentage'));
+        launchView({ figure: getInstrumentFigure(plot, 'FillProbability|1'), chartType: 'line' } );
+        launchView({ figure: getInstrumentFigure(plot, 'TWALiquidityAroundBBO|10bpsNotional'), chartType: 'line', priceFormat: { type: 'volume' }} );
+        launchView({ figure: getInstrumentFigure(plot, 'TimeAtEBBO|Percentage'), chartType: 'line'} );
+        launchView({ figure: getInstrumentFigure(plot, 'TradeNotional|Lit'), chartType: 'area', priceFormat: { type: 'volume' }} );
         return getInstrumentFigure(plot, 'Spread|RelTWA');
     }
     return undefined;
