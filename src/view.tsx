@@ -32,12 +32,12 @@ const App: React.FC = () => {
     if (chartOptions && figure && figure.data.length > 0) {
         if (chartOptions.chartType == 'line') {
             return (
-                <PlotLineElement key={figure.metric} figure={figure.data} title={figure.metric} priceFormat={chartOptions.priceFormat}></PlotLineElement>
+                <PlotLineElement key={figure.metric} figure={figure.data} title={figure.metric} ></PlotLineElement>
             )
         }
         else if (chartOptions.chartType == 'area') {
             return (
-                <PlotAreaElement key={figure.metric} figure={figure.data} title={figure.metric} priceFormat={chartOptions.priceFormat}></PlotAreaElement>
+                <PlotAreaElement key={figure.metric} figure={figure.data} title={figure.metric} ></PlotAreaElement>
             )
         } else {
             return (<div></div>);

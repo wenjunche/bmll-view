@@ -1,69 +1,111 @@
 import log from 'loglevel';
-import React, { ReactNode, useRef } from 'react';
+import React from 'react';
+import { fin } from 'openfin-adapter/src/mock';
 
-import { createChart, ChartOptions, ColorType, LineStyle, IChartApi, ISeriesApi, PriceScaleMode, PriceFormat } from 'lightweight-charts';
-import { TradingViewFigure } from 'datastore';
-
-const darkTheme:ChartOptions = {
-    layout: {
-        background: { type: ColorType.Solid, color: '#2B2B43'},
-        backgroundColor: '#2B2B43',
-        // lineColor: '#2B2B43',
-        textColor: '#D9D9D9',
-        fontSize: 11,
-        fontFamily: `'Trebuchet MS', Roboto, Ubuntu, sans-serif`
-    },
-    grid: {
-        vertLines: {
-            color: '#2B2B43',
-            style: LineStyle.Solid,
-            visible: false
-        },
-        horzLines: {
-            color: '#363C4E',
-            style: LineStyle.Solid,
-            visible: false
-        },
-    },
-    // @ts-expect-error
-    leftPriceScale: {
-        borderVisible: false,
-        visible: true,
-        drawTicks: false,
-        mode: PriceScaleMode.Normal
-    },
-    // @ts-expect-error
-    rightPriceScale: {
-        borderVisible: false,
-        visible: false
-    },
-    // @ts-expect-error
-    timeScale: {
-        borderVisible: false
-    }
-};
+import * as Highcharts from 'highcharts';
+import { HighChartsFigure } from 'datastore';
 
 const lineColors = ['#8C61FF', '#FF8C4C', '#F4BF00', '#46C8F1', '#00CC88', '#FF5E60', '#FF8FB8', '#E9FF8F'];
 
+Highcharts.setOptions({
+    colors: lineColors,
+    chart: {
+        backgroundColor: '#2B2B43',        
+    },
+    xAxis: {
+        gridLineWidth: 0,
+        lineColor: '#D9D9D9',
+        tickColor: '#D9D9D9',
+        labels: {
+            style: {
+                color: '#D9D9D9',
+                font: '11px Trebuchet MS, Verdana, sans-serif'
+            },
+        }
+    },
+    yAxis: {
+        gridLineWidth: 0,
+        lineColor: '#D9D9D9',
+        tickColor: '#D9D9D9',
+        labels: {
+            style: {
+                color: '#D9D9D9',
+                font: '11px Trebuchet MS, Verdana, sans-serif'
+            }
+        }
+    },
+    credits: {
+        enabled: true,
+        href: 'https://openfin.co',
+        text: 'OpenFin'
+    }, 
+});
+
+const defaultLineOptions:Highcharts.Options = {
+    title: {
+        text: 'Hightcharts line'
+    },
+    yAxis: {
+        title: {
+            text: 'yAxis Title',
+            style: { color: '#D9D9D9' }
+        }
+    },
+    xAxis: {
+        type: 'datetime',
+        labels: {
+            // formatter: function() {
+            //   // @ts-ignore
+            //   return Highcharts.dateFormat('%b %e', this.value);
+            // }
+          },
+        accessibility: {
+            // @TODO add later
+        }
+    },
+    legend: {
+        layout: 'vertical',
+        align: 'right',
+        verticalAlign: 'middle',
+        itemStyle: { color: '#D9D9D9'}
+    },
+    plotOptions: {
+        series: {
+            marker: {
+                enabled: false
+            }
+            
+        }
+    },
+};
+
+const defaultSeriesOptions:Highcharts.SeriesLineOptions = {
+    type: 'line',
+    lineWidth: 1,
+    allowPointSelect: false,
+}
+
+const dateFormatter: Highcharts.AxisLabelsFormatterCallbackFunction = function() {
+    // @ts-ignore
+    return Highcharts.dateFormat('%b %e', this.value as number);
+}
+
 export interface PlotLineElementProps {
     title?: string;
-    figure: Array<TradingViewFigure>;
-    priceFormat?: PriceFormat
+    figure: Array<HighChartsFigure>;
 }
 
 export const PlotLineElement:React.FC<PlotLineElementProps> = (props: PlotLineElementProps) => {
     const chartDiv = React.createRef<HTMLDivElement>();
-    const legendDiv = React.createRef<HTMLDivElement>();
     const [title, setTitle] = React.useState<string>();
-    const [figure, setFigure] = React.useState<Array<TradingViewFigure>>([]);
-    const [chart, setChart] = React.useState<IChartApi>();
-    const [series, setSeries] = React.useState<Array<ISeriesApi<'Line'>>>([]);
-    const [bounds, setBounds] = React.useState();
+    const [figure, setFigure] = React.useState<Array<HighChartsFigure>>([]);
+    const [chart, setChart] = React.useState<Highcharts.Chart>();
+    const [series, setSeries] = React.useState<Array<Highcharts.Series>>([]);
+    const [bounds, setBounds] = React.useState<OpenFin.Bounds>();
 
     React.useEffect(() => {
         const updateBounds = async() => {
-            // @ts-ignore
-            const initBounds = await fin.me.getBounds();
+            const initBounds = await (fin.me as OpenFin.View).getBounds();
             log.debug('PlotElement:setBounds', initBounds);
             setBounds(initBounds);
         }
@@ -91,18 +133,20 @@ export const PlotLineElement:React.FC<PlotLineElementProps> = (props: PlotLineEl
         const configChart = async() => {
             if (chartDiv.current != null && bounds) {
                 if (!chart) {
-                    // @ts-ignore
-                    darkTheme.height = bounds.height;
-                    // @ts-ignore
-                    darkTheme.width  = bounds.width;
-                    log.debug('creating chart', darkTheme);
-                    const cc = createChart(chartDiv.current, darkTheme);
+                    const options:Highcharts.Options = JSON.parse(JSON.stringify(defaultLineOptions));
+                    options.chart = {
+                        height: bounds.height,
+                        width: bounds.width
+                    }
+                    //@ts-ignore
+                    options.yAxis.title.text = title;
+                    //@ts-ignore
+                    options.xAxis.labels.formatter = dateFormatter;
+                    const cc = Highcharts.chart(chartDiv.current, options);
                     setChart(cc);
                 }
                 if (chart && bounds) {
-                    // @ts-ignore
-                    chart.resize(bounds.width, bounds.height, true);
-                    chart.timeScale().fitContent();
+                    chart.setSize(bounds.width, bounds.height, true);
                 }
             } else {
                 log.debug('PlotElement:configChart', bounds);
@@ -113,34 +157,21 @@ export const PlotLineElement:React.FC<PlotLineElementProps> = (props: PlotLineEl
 
 
     const updateFigure = React.useCallback(() => {
-        if (chartDiv.current && legendDiv.current && figure && figure.length > 0 && chart) {
+        if (chartDiv.current && figure && figure.length > 0 && chart) {
             if (!series.length) {
-                let colorIndex = 0;
-                const lineCharts: Array<ISeriesApi<'Line'>> = [];
+                const lineCharts: Array<Highcharts.Series> = [];
                 const symbolList:Array<string> = [];
                 figure.forEach( plot => {
-                    const lineSeries = chart.addLineSeries({
-                        color: lineColors[colorIndex],
-                        lineWidth: 1,
-                    });
-                    lineSeries.setData(plot.data);
-                    lineSeries.priceScale().applyOptions({ borderVisible: false });
-                    lineSeries.applyOptions({ priceLineVisible: false, lastValueVisible: false, priceFormat: props.priceFormat});
-                    colorIndex += 1;
+                    const lineSeries = chart.addSeries({ ...defaultSeriesOptions, name: plot.symbol, data: plot.data });
                     lineCharts.push(lineSeries);
                     symbolList.push(plot.symbol);
-                    if (colorIndex >= lineColors.length) {
-                        log.warn('too many lines, too little color');
-                    }
                 } );
-                chart.timeScale().fitContent();
                 setSeries(lineCharts);
-                legendDiv.current.innerText = `${title} (${symbolList.join(',')})`;
             }
         } else {
             log.debug('figure ready but no chart');
         }
-    }, [chartDiv.current, legendDiv.current, figure, chart]);
+    }, [chartDiv.current, figure, chart]);
 
     React.useEffect(() => {
         log.debug('updating figure');
@@ -151,11 +182,11 @@ export const PlotLineElement:React.FC<PlotLineElementProps> = (props: PlotLineEl
         if (chartDiv.current) {
             const observer = new ResizeObserver(() => {
                 if (chart && chartDiv.current) {
-                    chart.resize(chartDiv.current.clientWidth, chartDiv.current.clientHeight);
+                    chart.setSize(chartDiv.current.clientWidth, chartDiv.current.clientHeight);
                 }
             });
             if (chart && chartDiv.current) {
-                chart.resize(chartDiv.current.clientWidth, chartDiv.current.clientHeight);
+                chart.setSize(chartDiv.current.clientWidth, chartDiv.current.clientHeight);
             }
         observer.observe(chartDiv.current);
         }
@@ -163,9 +194,7 @@ export const PlotLineElement:React.FC<PlotLineElementProps> = (props: PlotLineEl
 
     return (
         <div>
-            <div ref={legendDiv} style={ {position: 'relative', float: 'right', height: '30px', right: '10px', zIndex: 2, color: 'white'} }>
-            </div>
-            <div ref={chartDiv} style={{ position: "relative", top: '-30px' }}>
+            <div ref={chartDiv}>
             </div>
         </div>
     );

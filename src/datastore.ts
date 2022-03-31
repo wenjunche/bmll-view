@@ -11,23 +11,20 @@ import {
 import { getToken } from './auth';
 import log from 'loglevel';
 
-export interface TradingViewDataPoint {
-    time: string;
-    value: number;
-}
+export type HighChartsDataPoint = [ number, number ];
 
-export interface TradingViewFigure {
+export interface HighChartsFigure {
     symbol: string;  // MIC
-    data: Array<TradingViewDataPoint>
+    data: Array<HighChartsDataPoint>
 }
 
 export interface InstrumentFigure {
     metric: string;
-    data: Array<TradingViewFigure>;
+    data: Array<HighChartsFigure>;
 }
 
-export type TradomgViewDataMap = Map<string, TradingViewFigure>;  // MIC => TradingViewFigure
-export type InstrumentDataMap = Map<string, TradomgViewDataMap>;  // Metric => TradomgViewDataMap
+export type HighChartsDataMap = Map<string, HighChartsFigure>;  // MIC => TradingViewFigure
+export type InstrumentDataMap = Map<string, HighChartsDataMap>;  // Metric => TradomgViewDataMap
 
 const excludedMics = new Set(['XEQT', 'BOTC', 'SGMX', 'SGMU']);
 
@@ -75,7 +72,7 @@ export const getSecurityMetrics = async (
     listing: Listing,
     dates: string[],
     metricFrequency = 'D'
-): Promise<TradingViewFigure> => {
+): Promise<HighChartsFigure> => {
     const metricNames = ["TradeNotional|Lit"];
     const [startDate, endDate] = dates;
 
@@ -111,15 +108,15 @@ export const getSecurityMetrics = async (
     }
 }
 
-export const getAllSecurityMetrics = async (listing: Listing[], dates: string[]): Promise<Array<TradingViewFigure>> => {
-    const requests: Array<Promise<TradingViewFigure>> = [];
+export const getAllSecurityMetrics = async (listing: Listing[], dates: string[]): Promise<Array<HighChartsFigure>> => {
+    const requests: Array<Promise<HighChartsFigure>> = [];
     listing.forEach(value => {
         if (value.IsAlive) {
             requests.push(getSecurityMetrics(value, dates));
         }
     });
-    const list: Array<TradingViewFigure> = await Promise.all(requests);
-    const result: Array<TradingViewFigure> = [];
+    const list: Array<HighChartsFigure> = await Promise.all(requests);
+    const result: Array<HighChartsFigure> = [];
     list.forEach(item => {
         if (checkMetrics(item)) {
             result.push(item)
@@ -210,7 +207,7 @@ export const transformJoinedData = (listing: Array<JoinedListingMetric>, metricL
                 micFeature = { symbol: item.MIC, data: []};
                 metricFeature.set(item.MIC, micFeature);
             }
-            micFeature.data.push({ time: item.Date, value: item[metric] })
+            micFeature.data.push([Date.parse(item.Date), item[metric] ]);
         });    
     });
     generateCompositeSeries(map, 'TWALiquidityAroundBBO|10bpsNotional',  ['TWALiquidityAroundBBO|Ask10bpsNotional', 'TWALiquidityAroundBBO|Bid10bpsNotional']);
@@ -234,12 +231,12 @@ const generateCompositeSeries = (map: InstrumentDataMap, targetMetric: string, s
     const [metric1, metric2] = sourceMetric;
     const source1 = map.get(metric1);
     const source2 = map.get(metric2);
-    const tvMap:TradomgViewDataMap = new Map();
+    const tvMap:HighChartsDataMap = new Map();
     if (source1 && source2) {
         source1.forEach((tvFigure1, mic) => {
             const tvFigure2 = source2.get(mic);
             if (tvFigure1 && tvFigure2) {
-                const composite: TradingViewFigure = { symbol: mic, data: averageDataPoints(tvFigure1.data, tvFigure2.data) }
+                const composite: HighChartsFigure = { symbol: mic, data: averageDataPoints(tvFigure1.data, tvFigure2.data) }
                 tvMap.set(mic, composite);
             }
         });    
@@ -247,21 +244,21 @@ const generateCompositeSeries = (map: InstrumentDataMap, targetMetric: string, s
     map.set(targetMetric, tvMap);
 }
 
-const averageDataPoints = (list1: Array<TradingViewDataPoint>, list2: Array<TradingViewDataPoint>):Array<TradingViewDataPoint> => {
-    const result:Array<TradingViewDataPoint> = [];
+const averageDataPoints = (list1: Array<HighChartsDataPoint>, list2: Array<HighChartsDataPoint>):Array<HighChartsDataPoint> => {
+    const result:Array<HighChartsDataPoint> = [];
     return list1.map((point, index) => {
-        // assuming TradingViewDataPoint is sorted by time
-        return { time: point.time, value: (point.value + list2[index].value) / 2 };
+        // assuming HighChartsDataPoint is sorted by time
+        return [ point[0], (point[1] + list2[index][1]) / 2 ];
     })
 }
 
-const checkMetrics = (figure: TradingViewFigure): boolean => {
-    return figure.data.filter(item => item.value > 0).length > 0;
+const checkMetrics = (figure: HighChartsFigure): boolean => {
+    return figure.data.filter(item => item[1] > 0).length > 0;
 }
 
-const dataTransform = (dataInFigure: Array<ListingMetric>): Array<TradingViewDataPoint> => {
+const dataTransform = (dataInFigure: Array<ListingMetric>): Array<HighChartsDataPoint> => {
     const newData = dataInFigure.map(item => { 
-        return {time: item.Date, value: item['Value']};
+        return [ Date.parse(item.Date), item['Value']] as HighChartsDataPoint;
      });
      log.debug('TV data', newData);
      return newData;

@@ -31,7 +31,7 @@
         "@openfin/workspace-platform": "^6.2.4",
         "antd": "^4.19.3",
         "aws-amplify": "^4.3.16",
-        "lightweight-charts": "^3.8.0",
+        "highcharts": "^10.0.0",
         "loglevel": "^1.8.0",
         "openfin-adapter": "^24.68.14",
         "react": "^18.0.0",
