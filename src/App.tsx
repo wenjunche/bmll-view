@@ -31,15 +31,15 @@ interface ChartViewOptions {
     figure?: InstrumentFigure;
     chartType: 'line' | 'area';
     targetIdentity?: OpenFin.Identity,
-    priceFormat?: any
+    stacking?: string;
 }
 
 async function launchView(options: ChartViewOptions ) {
-    let { figure, chartType, targetIdentity, priceFormat } = options;
+    let { figure, chartType, targetIdentity, stacking } = options;
     if (figure) {
         const platform: WorkspacePlatformModule = getCurrentSync();
         const viewOptions = { url: 'http://localhost:8081/plotview.html',
-                            customData: { figure: figure, chartType, priceFormat }
+                            customData: { figure: figure, chartType, stacking }
                             };
 
         log.debug('createView', viewOptions);
@@ -53,7 +53,7 @@ async function launchView(options: ChartViewOptions ) {
     }
 }
 
-const retrieveData = async():Promise<InstrumentFigure | undefined> => {
+const retrieveData = async():Promise<ChartViewOptions | undefined> => {
     await initApiClient();
 
     const pyListing = await loadSecurityByInstrument({ISIN: 'GB00BH4HKS39', OPOL: 'XLON'});
@@ -76,10 +76,11 @@ const retrieveData = async():Promise<InstrumentFigure | undefined> => {
 
     if (plot.size > 0) {
         launchView({ figure: getInstrumentFigure(plot, 'FillProbability|1'), chartType: 'line' } );
-        launchView({ figure: getInstrumentFigure(plot, 'TWALiquidityAroundBBO|10bpsNotional'), chartType: 'line', priceFormat: { type: 'volume' }} );
+        launchView({ figure: getInstrumentFigure(plot, 'TWALiquidityAroundBBO|10bpsNotional'), chartType: 'line' } );
         launchView({ figure: getInstrumentFigure(plot, 'TimeAtEBBO|Percentage'), chartType: 'line'} );
-        launchView({ figure: getInstrumentFigure(plot, 'TradeNotional|Lit'), chartType: 'area', priceFormat: { type: 'volume' }} );
-        return getInstrumentFigure(plot, 'Spread|RelTWA');
+        launchView({ figure: getInstrumentFigure(plot, 'TradeNotional|Lit'), chartType: 'area'} );
+        launchView({ figure: getInstrumentFigure(plot, 'TradeNotional|Lit'), chartType: 'area', stacking: 'percent'} );
+        return { figure: getInstrumentFigure(plot, 'Spread|RelTWA'), chartType: 'line' };
     }
     return undefined;
 }
@@ -87,7 +88,7 @@ const retrieveData = async():Promise<InstrumentFigure | undefined> => {
 
 const App: React.FC = () => {
     const [isAuth, setIsAuth] = React.useState<boolean>(false);
-    const [figure, setFigure] = React.useState<InstrumentFigure>();
+    const [options, setOptions] = React.useState<ChartViewOptions>();
 
     React.useEffect(() => {
         const checkAuth = async() => {
@@ -101,7 +102,7 @@ const App: React.FC = () => {
             const getFigure = async() => {
                 const firstFigure = await retrieveData();
                 if (firstFigure) {
-                    setFigure(firstFigure);
+                    setOptions(firstFigure);
                 }
             }
             getFigure();
@@ -117,10 +118,18 @@ const App: React.FC = () => {
 
     if (!isAuth) {
         return (<Login onLogin={onLogin}></Login>);
-    } else if (figure) {
-        return (
-            <PlotLineElement key={figure.metric} figure={figure.data} title={figure.metric} ></PlotLineElement>
-        )
+    } else if (options?.figure) {
+        if (options.chartType === 'line') {
+            return (
+                <PlotLineElement key={options.figure.metric} figure={options.figure.data} title={options.figure.metric} ></PlotLineElement>
+            )
+        } else if (options.chartType === 'area') {
+            return (
+                <PlotAreaElement key={options.figure.metric} figure={options.figure.data} title={options.figure.metric} stacking={options.stacking} ></PlotAreaElement>
+            )
+        } else {
+            return (<div></div>);
+        }
     } else {
         return (<div></div>);
     }

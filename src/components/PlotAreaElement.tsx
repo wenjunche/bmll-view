@@ -75,8 +75,9 @@ const defaultAreaOptions:Highcharts.Options = {
         series: {
             marker: {
                 enabled: false
-            }
-            
+            }            
+        },
+        area: {            
         }
     },
 };
@@ -95,6 +96,7 @@ const dateFormatter: Highcharts.AxisLabelsFormatterCallbackFunction = function()
 export interface PlotAreaElementProps {
     title?: string;
     figure: Array<HighChartsFigure>;
+    stacking?: string;
 }
 
 export const PlotAreaElement:React.FC<PlotAreaElementProps> = (props: PlotAreaElementProps) => {
@@ -139,6 +141,10 @@ export const PlotAreaElement:React.FC<PlotAreaElementProps> = (props: PlotAreaEl
                     options.chart = {
                         height: bounds.height,
                         width: bounds.width
+                    }
+                    if (props.stacking) {
+                        //@ts-ignore
+                        options.plotOptions.area?.stacking = props.stacking;
                     }
                     //@ts-ignore
                     options.yAxis.title.text = title;

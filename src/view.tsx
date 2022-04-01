@@ -37,7 +37,7 @@ const App: React.FC = () => {
         }
         else if (chartOptions.chartType == 'area') {
             return (
-                <PlotAreaElement key={figure.metric} figure={figure.data} title={figure.metric} ></PlotAreaElement>
+                <PlotAreaElement key={figure.metric} figure={figure.data} title={figure.metric} stacking={chartOptions.stacking} ></PlotAreaElement>
             )
         } else {
             return (<div></div>);
