@@ -1,7 +1,7 @@
-import { configureAmplify, isAuthenticated } from './auth'
-import { Login } from './components/Login';
-import { PlotLineElement } from './components/PlotLineElement'
-import { PlotAreaElement } from './components/PlotAreaElement'
+import { configureAmplify, isAuthenticated } from '../auth'
+import { Login } from './Login';
+import { PlotLineElement } from './PlotLineElement'
+import { PlotAreaElement } from './PlotAreaElement'
 import React from 'react';
 import { ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import log from 'loglevel';
@@ -10,7 +10,7 @@ import { fin } from 'openfin-adapter/src/mock';
 import { getCurrentSync, WorkspacePlatformModule } from '@openfin/workspace-platform';
 
 import { ChartViewOptions } from 'common';
-import { getAvailableMetrics, initApiClient, getTimeSeries, dataJoin, loadSecurityByInstrument, getInstrumentFigure, transformJoinedData } from './datastore';
+import { getAvailableMetrics, initApiClient, getTimeSeries, dataJoin, loadSecurityByInstrument, getInstrumentFigure, transformJoinedData } from '../datastore';
 
 log.setLevel('debug');
 
