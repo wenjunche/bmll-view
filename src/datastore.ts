@@ -11,17 +11,7 @@ import {
 import { getToken } from './auth';
 import log from 'loglevel';
 
-export type HighChartsDataPoint = [ number, number ];
-
-export interface HighChartsFigure {
-    symbol: string;  // MIC
-    data: Array<HighChartsDataPoint>
-}
-
-export interface InstrumentFigure {
-    metric: string;
-    data: Array<HighChartsFigure>;
-}
+import { HighChartsDataPoint, HighChartsFigure,InstrumentFigure }  from './common';
 
 export type HighChartsDataMap = Map<string, HighChartsFigure>;  // MIC => TradingViewFigure
 export type InstrumentDataMap = Map<string, HighChartsDataMap>;  // Metric => TradomgViewDataMap

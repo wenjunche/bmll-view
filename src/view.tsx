@@ -6,7 +6,7 @@ import { PlotAreaElement } from './components/PlotAreaElement'
 import log from 'loglevel';
 import { fin } from 'openfin-adapter/src/mock';
 
-import { InstrumentFigure } from './datastore';
+import { InstrumentFigure, ChartViewOptions } from './common';
 import './index.css';
 
 window.addEventListener("DOMContentLoaded",  async () => {
@@ -17,7 +17,7 @@ log.setLevel('debug');
 
 const App: React.FC = () => {
     const [figure, setFigure] = React.useState<InstrumentFigure>();
-    const [chartOptions, setChartOptions] = React.useState<any>();
+    const [chartOptions, setChartOptions] = React.useState<ChartViewOptions>();
 
     React.useEffect(() => {
             const retrieveData = async() => {
@@ -30,12 +30,12 @@ const App: React.FC = () => {
     }, []);
 
     if (chartOptions && figure && figure.data.length > 0) {
-        if (chartOptions.chartType == 'line') {
+        if (chartOptions.chartType === 'line') {
             return (
                 <PlotLineElement key={figure.metric} figure={figure.data} title={figure.metric} ></PlotLineElement>
             )
         }
-        else if (chartOptions.chartType == 'area') {
+        else if (chartOptions.chartType === 'area') {
             return (
                 <PlotAreaElement key={figure.metric} figure={figure.data} title={figure.metric} stacking={chartOptions.stacking} ></PlotAreaElement>
             )

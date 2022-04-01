@@ -9,7 +9,8 @@ import log from 'loglevel';
 import { fin } from 'openfin-adapter/src/mock';
 import { getCurrentSync, WorkspacePlatformModule } from '@openfin/workspace-platform';
 
-import { getAvailableMetrics, initApiClient, InstrumentFigure, getTimeSeries, dataJoin, loadSecurityByInstrument, getInstrumentFigure, transformJoinedData } from './datastore';
+import { ChartViewOptions } from 'common';
+import { getAvailableMetrics, initApiClient, getTimeSeries, dataJoin, loadSecurityByInstrument, getInstrumentFigure, transformJoinedData } from './datastore';
 
 log.setLevel('debug');
 
@@ -27,12 +28,6 @@ const getDateRange = () => {
             end.getFullYear()  + "-" + (end.getMonth()+1) + "-" + end.getDate()]
 }
 
-interface ChartViewOptions {
-    figure?: InstrumentFigure;
-    chartType: 'line' | 'area';
-    targetIdentity?: OpenFin.Identity,
-    stacking?: string;
-}
 
 async function launchView(options: ChartViewOptions ) {
     let { figure, chartType, targetIdentity, stacking } = options;
