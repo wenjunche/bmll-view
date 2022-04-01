@@ -48,10 +48,12 @@ async function launchView(options: ChartViewOptions ) {
     }
 }
 
+const testISINs = ['GB00BH4HKS39', 'GB00B1XZS820', 'GB0006731235', 'GB00B02J6398', 'GB0000536739', 'GB0000456144'];
+
 const retrieveData = async():Promise<ChartViewOptions | undefined> => {
     await initApiClient();
 
-    const pyListing = await loadSecurityByInstrument({ISIN: 'GB00BH4HKS39', OPOL: 'XLON'});
+    const pyListing = await loadSecurityByInstrument({ISIN: 'GB0000456144', OPOL: 'XLON'});
     console.log('pyListing', pyListing);
     const metrics = await getAvailableMetrics([
             { field: 'TWALiquidityAroundBBO', frequency: 'D', suffix: ['Ask10bpsNotional', 'Bid10bpsNotional'] },

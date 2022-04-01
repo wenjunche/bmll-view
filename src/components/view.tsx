@@ -1,13 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import { PlotLineElement } from './components/PlotLineElement'
-import { PlotAreaElement } from './components/PlotAreaElement'
+import { PlotLineElement } from './PlotLineElement'
+import { PlotAreaElement } from './PlotAreaElement'
 import log from 'loglevel';
 import { fin } from 'openfin-adapter/src/mock';
 
-import { InstrumentFigure, ChartViewOptions } from './common';
-import './index.css';
+import { InstrumentFigure, ChartViewOptions } from '../common';
+import '../index.css';
 
 window.addEventListener("DOMContentLoaded",  async () => {
     ReactDOM.render(<App />, document.getElementById('root'));

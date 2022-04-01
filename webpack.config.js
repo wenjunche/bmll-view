@@ -7,7 +7,7 @@ module.exports = {
     entry: {
         index: './src/index.tsx',
         provider: './src/provider.ts',
-        view: './src/view.tsx',
+        view: './src/components/view.tsx',
     },
     devtool: 'inline-source-map',
     output: {
