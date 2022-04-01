@@ -71,6 +71,8 @@ const defaultAreaOptions:Highcharts.Options = {
         verticalAlign: 'middle',
         itemStyle: { color: '#D9D9D9'}
     },
+    tooltip: {        
+    },
     plotOptions: {
         series: {
             marker: {
@@ -144,7 +146,9 @@ export const PlotAreaElement:React.FC<PlotAreaElementProps> = (props: PlotAreaEl
                     }
                     if (props.stacking) {
                         //@ts-ignore
-                        options.plotOptions.area?.stacking = props.stacking;
+                        options.plotOptions.area.stacking = props.stacking;
+                        //@ts-ignore
+                        options.tooltip.split = true;
                     }
                     //@ts-ignore
                     options.yAxis.title.text = title;
