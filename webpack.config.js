@@ -7,7 +7,8 @@ module.exports = {
     entry: {
         index: './src/index.tsx',
         provider: './src/provider.ts',
-        view: './src/components/view.tsx',
+        isin: './src/components/Isin.tsx',
+        plotview: './src/components/PlotView.tsx',
     },
     devtool: 'inline-source-map',
     output: {
@@ -47,7 +48,13 @@ module.exports = {
             title: 'OpenFin BMLL View',
             template: 'res/plotview.html',
             filename: 'plotview.html',
-            chunks: ['view']
+            chunks: ['plotview']
+        }),
+        new HtmlwebpackPlugin({
+            title: 'OpenFin BMLL ISIN selection',
+            template: 'res/select.html',
+            filename: 'select.html',
+            chunks: ['isin']
         })
     ],
     devServer: {

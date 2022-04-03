@@ -48,8 +48,6 @@ async function launchView(options: ChartViewOptions ) {
     }
 }
 
-const testISINs = ['GB00BH4HKS39', 'GB00B1XZS820', 'GB0006731235', 'GB00B02J6398', 'GB0000536739', 'GB0000456144'];
-
 const retrieveData = async():Promise<ChartViewOptions | undefined> => {
     await initApiClient();
 
@@ -72,11 +70,11 @@ const retrieveData = async():Promise<ChartViewOptions | undefined> => {
     log.debug('plot', plot);
 
     if (plot.size > 0) {
-        launchView({ figure: getInstrumentFigure(plot, 'FillProbability|1'), chartType: 'line' } );
-        launchView({ figure: getInstrumentFigure(plot, 'TWALiquidityAroundBBO|10bpsNotional'), chartType: 'line' } );
-        launchView({ figure: getInstrumentFigure(plot, 'TimeAtEBBO|Percentage'), chartType: 'line'} );
-        launchView({ figure: getInstrumentFigure(plot, 'TradeNotional|Lit'), chartType: 'area'} );
-        launchView({ figure: getInstrumentFigure(plot, 'TradeNotional|Lit'), chartType: 'area', stacking: 'percent'} );
+        // launchView({ figure: getInstrumentFigure(plot, 'FillProbability|1'), chartType: 'line' } );
+        // launchView({ figure: getInstrumentFigure(plot, 'TWALiquidityAroundBBO|10bpsNotional'), chartType: 'line' } );
+        // launchView({ figure: getInstrumentFigure(plot, 'TimeAtEBBO|Percentage'), chartType: 'line'} );
+        // launchView({ figure: getInstrumentFigure(plot, 'TradeNotional|Lit'), chartType: 'area'} );
+        // launchView({ figure: getInstrumentFigure(plot, 'TradeNotional|Lit'), chartType: 'area', stacking: 'percent'} );
         return { figure: getInstrumentFigure(plot, 'Spread|RelTWA'), chartType: 'line' };
     }
     return undefined;
