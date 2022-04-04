@@ -11,10 +11,20 @@ import {
 import { getToken } from './auth';
 import log from 'loglevel';
 
+export enum MetricName {
+    FillProbability = 'FillProbability|1',
+    TWALiquidityAroundBBO = 'TWALiquidityAroundBBO|10bpsNotional',
+    TimeAtEBBO = 'TimeAtEBBO|Percentage',
+    TradeNotional = 'TradeNotional|Lit',
+    SpreadRelTWA = 'Spread|RelTWA',
+}
+
 import { HighChartsDataPoint, HighChartsFigure,InstrumentFigure }  from './common';
 
-export type HighChartsDataMap = Map<string, HighChartsFigure>;  // MIC => TradingViewFigure
-export type InstrumentDataMap = Map<string, HighChartsDataMap>;  // Metric => TradomgViewDataMap
+//export type HighChartsDataMap = Map<string, HighChartsFigure>;  // MIC => TradingViewFigure
+export type HighChartsDataMap = Record<string, HighChartsFigure>;  // MIC => TradingViewFigure
+//export type InstrumentDataMap = Map<string, HighChartsDataMap>;  // Metric => TradomgViewDataMap
+export type InstrumentDataMap = Record<string, HighChartsDataMap>; // Metric => TradomgViewDataMap
 
 const excludedMics = new Set(['XEQT', 'BOTC', 'SGMX', 'SGMU']);
 
@@ -26,8 +36,10 @@ const handleAxiosError = async (error: Error) => {
 let apiclient: ApiClient;
 
 export const initApiClient = async(environment = 'prod') => {
-    apiclient = new ApiClient({ environment }, handleAxiosError);
-    await apiclient.login(new AsyncAuthTokenProvider(getToken));
+    if (!apiclient) {
+        apiclient = new ApiClient({ environment }, handleAxiosError);
+        await apiclient.login(new AsyncAuthTokenProvider(getToken));
+    }
 }
 
 export const loadSecurityBySymbol = async(symbol: string, isPrimary = false): Promise<Listing[]> => {
@@ -124,9 +136,6 @@ interface MetricFilter {
 }
 
 const filterMetricMetadata = (m: MetricMetadata, f: MetricFilter): boolean => {
-    if (m.field === 'TWALiquidityAroundBBO|Ask10bpsOrders') {
-        console.log(' ');
-    }
     let field:boolean = true;
     if (f.field) {
         const [mmetric, msuffix] = m.field.split('|');
@@ -184,18 +193,18 @@ export const dataJoin = (listing: Listing[], listingMetric: ListingMetric[]): Ar
 }
 
 export const transformJoinedData = (listing: Array<JoinedListingMetric>, metricList: Array<string>):InstrumentDataMap => {
-    const map: InstrumentDataMap = new Map();
+    const map: InstrumentDataMap = {};
     metricList.forEach(metric => {
         listing.forEach(item => {
-            let metricFeature = map.get(metric);
+            let metricFeature = map[metric];
             if (!metricFeature) {
-                metricFeature = new Map();
-                map.set(metric, metricFeature);
+                metricFeature = {};
+                map[metric] = metricFeature;
             }
-            let micFeature = metricFeature.get(item.MIC);
+            let micFeature = metricFeature[item.MIC];
             if (!micFeature) {
                 micFeature = { symbol: item.MIC, data: []};
-                metricFeature.set(item.MIC, micFeature);
+                metricFeature[item.MIC] = micFeature;
             }
             micFeature.data.push([Date.parse(item.Date), item[metric] ]);
         });    
@@ -210,28 +219,31 @@ export const transformJoinedData = (listing: Array<JoinedListingMetric>, metricL
     return map;
 }
 
-export const getInstrumentFigure = (map: InstrumentDataMap, metric: string):InstrumentFigure|undefined => {
-    const tvMap = map.get(metric);
+export const getInstrumentFigure = (map: InstrumentDataMap, metric: MetricName):InstrumentFigure => {
+    const tvMap = map[metric];
     if (tvMap) {
-        return { metric, data: Array.from(tvMap.values()) };
+        return { metric, data: Array.from(Object.values(tvMap)) };
+    } else {
+        return { metric, data: [] } ;
     }
 }
 
 const generateCompositeSeries = (map: InstrumentDataMap, targetMetric: string, sourceMetric: string[]) => {
     const [metric1, metric2] = sourceMetric;
-    const source1 = map.get(metric1);
-    const source2 = map.get(metric2);
-    const tvMap:HighChartsDataMap = new Map();
+    const source1 = map[metric1];
+    const source2 = map[metric2];
+    const tvMap:HighChartsDataMap = {};
     if (source1 && source2) {
-        source1.forEach((tvFigure1, mic) => {
-            const tvFigure2 = source2.get(mic);
+        Object.keys(source1).forEach(mic => {
+            const tvFigure1 = source1[mic];
+            const tvFigure2 = source2[mic];
             if (tvFigure1 && tvFigure2) {
                 const composite: HighChartsFigure = { symbol: mic, data: averageDataPoints(tvFigure1.data, tvFigure2.data) }
-                tvMap.set(mic, composite);
+                tvMap[mic] = composite;
             }
-        });    
+        });
     }
-    map.set(targetMetric, tvMap);
+    map[targetMetric] = tvMap;
 }
 
 const averageDataPoints = (list1: Array<HighChartsDataPoint>, list2: Array<HighChartsDataPoint>):Array<HighChartsDataPoint> => {

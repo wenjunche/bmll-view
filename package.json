@@ -29,6 +29,7 @@
         "@bmll/dd-api": "c:\\Users\\wenju\\Documents\\projects\\bmll-viz-labs\\dd-api\\dist",
         "@openfin/workspace": "^6.2.4",
         "@openfin/workspace-platform": "^6.2.4",
+        "@reduxjs/toolkit": "^1.8.1",
         "antd": "^4.19.3",
         "aws-amplify": "^4.3.16",
         "highcharts": "^10.0.0",
@@ -36,6 +37,7 @@
         "openfin-adapter": "^24.68.14",
         "react": "^18.0.0",
         "react-dom": "^18.0.0",
+        "react-redux": "^7.2.8",
         "styled-components": "^5.3.5"
     },
     "devDependencies": {

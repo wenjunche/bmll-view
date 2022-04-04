@@ -1,7 +1,9 @@
 import * as Highcharts from 'highcharts';
 import { BrowserCreateWindowRequest, BrowserWindowModule, getCurrentSync, Page, PageWithUpdatableRuntimeAttribs, WorkspacePlatformModule, PageLayout } from '@openfin/workspace-platform';
 import { LayoutExtended } from '@openfin/workspace';
-
+import { InstrumentDataMap, MetricName } from 'datastore';
+import store, {setISIN} from './store';
+import log from 'loglevel';
 
 const lineColors = ['#8C61FF', '#FF8C4C', '#F4BF00', '#46C8F1', '#00CC88', '#FF5E60', '#FF8FB8', '#E9FF8F'];
 Highcharts.setOptions({
@@ -122,9 +124,9 @@ export const getDefaultAreaSeriesOptions = ():Highcharts.SeriesLineOptions => {
 
 
 export interface ChartViewOptions {
-    figure?: InstrumentFigure;
+    metric: MetricName;
     chartType: 'line' | 'area';
-    targetIdentity?: OpenFin.Identity,
+    targetIdentity?: OpenFin.Identity;
     stacking?: string;
 }
 
@@ -133,13 +135,6 @@ export enum FDC3  {
     IntentName = 'ShowInstrument',
     ContextType = 'fdc3.instrument',
 }
-
-
-// export const launchAppWithIntent = async (intent: OpenFin.Intent):Promise<OpenFin.Identity> {
-//     console.log("Launching app with intent.", intent);
-
-//     return undefined;
-// }
 
 export const createViewIdentity = (uuid: string, name: string): OpenFin.Identity => {
     const viewIdentity: OpenFin.Identity = { uuid: uuid, name: `${window.crypto.randomUUID()}-${name}` };
@@ -186,4 +181,18 @@ export async function createBrowserWindow(options: BrowserWindowOptions): Promis
     const createdBrowserWin: BrowserWindowModule = await platform.Browser.createWindow(reqOptions);
     return createdBrowserWin;
 }
-  
+
+const BroadCastChannelName = 'chart-plot-data';
+let plotDataBroadcastChannel: BroadcastChannel;
+export const getBroadcastChannel = ():BroadcastChannel => {
+    if (!plotDataBroadcastChannel) {
+        log.debug(`creating broadcast channel ${BroadCastChannelName}`);
+        plotDataBroadcastChannel = new BroadcastChannel(BroadCastChannelName);
+    }
+    return plotDataBroadcastChannel;
+}
+
+export const broadcastPlotData = (data: InstrumentDataMap) => {
+    log.debug('broadcastPlotData', data);
+    getBroadcastChannel().postMessage(data);
+}

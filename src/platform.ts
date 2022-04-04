@@ -43,11 +43,16 @@ const plotPageLayout: PageLayout = {
     ]
 };
   
+let plotWindowCreated = false;
+
 class PlatformInteropBroker extends InteropBroker {
     async handleFiredIntent(intent: OpenFin.Intent) {
         console.log("Received request for a raised intent: ", intent);
         if (intent.name === FDC3.IntentName && intent.context.type === FDC3.ContextType) {
-            await createBrowserWindow({ title: 'Instrument Plot', layout: plotPageLayout });
+            if (!plotWindowCreated) {
+                plotWindowCreated = true;
+                await createBrowserWindow({ title: 'Instrument Plot', layout: plotPageLayout });
+            }
             const targetIdentity = { uuid: fin.me.uuid, name: plotViewName };
             log.debug(`setIntentTarget`, targetIdentity);
             super.setIntentTarget(intent, targetIdentity);
