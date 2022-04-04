@@ -1,43 +1,55 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { Provider } from 'react-redux';
 
 import { PlotLineElement } from './PlotLineElement'
 import { PlotAreaElement } from './PlotAreaElement'
 import log from 'loglevel';
 import { fin } from 'openfin-adapter/src/mock';
 
-import { InstrumentFigure, ChartViewOptions } from '../common';
+import store, { setInstrumentDataMap } from '../store';
+import { ChartViewOptions, getBroadcastChannel, connectChannel } from '../common';
+
 import '../index.css';
 
 window.addEventListener("DOMContentLoaded",  async () => {
-    ReactDOM.render(<App />, document.getElementById('root'));
+    getBroadcastChannel().onmessage = (event) => {
+        log.debug('broadcastChannel.onmessag', event);
+        store.dispatch(setInstrumentDataMap(event.data));
+    }    
+
+    ReactDOM.render(
+        <Provider store={store}>
+            <App /> 
+        </Provider>,
+        document.getElementById('root'));
+
+    await connectChannel();
 });
 
 log.setLevel('debug');
 
 const App: React.FC = () => {
-    const [figure, setFigure] = React.useState<InstrumentFigure>();
     const [chartOptions, setChartOptions] = React.useState<ChartViewOptions>();
 
     React.useEffect(() => {
             const retrieveData = async() => {
                 // @ts-ignore
                 const opt = await fin.me.getOptions();
-                setFigure(opt.customData.figure);
                 setChartOptions(opt.customData);
             }
             retrieveData();
     }, []);
 
-    if (chartOptions && figure && figure.data.length > 0) {
+    if (chartOptions) {
         if (chartOptions.chartType === 'line') {
             return (
-                <PlotLineElement key={figure.metric} figure={figure.data} title={figure.metric} ></PlotLineElement>
+                <PlotLineElement key={chartOptions.metric} title={chartOptions.metric} metric={chartOptions.metric}></PlotLineElement>
             )
         }
         else if (chartOptions.chartType === 'area') {
             return (
-                <PlotAreaElement key={figure.metric} figure={figure.data} title={figure.metric} stacking={chartOptions.stacking} ></PlotAreaElement>
+                <PlotAreaElement key={chartOptions.metric} title={chartOptions.metric} metric={chartOptions.metric} stacking={chartOptions.stacking} ></PlotAreaElement>
             )
         } else {
             return (<div></div>);

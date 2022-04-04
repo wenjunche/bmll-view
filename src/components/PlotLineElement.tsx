@@ -1,13 +1,15 @@
 import log from 'loglevel';
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { fin } from 'openfin-adapter/src/mock';
 
 import * as Highcharts from 'highcharts';
 import { HighChartsFigure, getDefaultChartOptions, getDefaultLineSeriesOptions, chartDateFormatter } from '../common';
+import { getSelector } from '../store'
 
 export interface PlotLineElementProps {
     title?: string;
-    figure: Array<HighChartsFigure>;
+    metric: string
 }
 
 export const PlotLineElement:React.FC<PlotLineElementProps> = (props: PlotLineElementProps) => {
@@ -17,6 +19,12 @@ export const PlotLineElement:React.FC<PlotLineElementProps> = (props: PlotLineEl
     const [chart, setChart] = React.useState<Highcharts.Chart>();
     const [series, setSeries] = React.useState<Array<Highcharts.Series>>([]);
     const [bounds, setBounds] = React.useState<OpenFin.Bounds>();
+    const storeFigure = useSelector(getSelector(props.metric));
+
+    React.useEffect(() => {
+        log.debug('store changed', storeFigure);
+        setFigure(storeFigure.data);
+    }, [storeFigure])
 
     React.useEffect(() => {
         const updateBounds = async() => {
@@ -37,10 +45,10 @@ export const PlotLineElement:React.FC<PlotLineElementProps> = (props: PlotLineEl
         });        
 
     }, []);
+    
     React.useEffect(() => {
         log.debug('setting figure');
         setTitle(props.title);
-        setFigure(props.figure);
     }, []);
 
 
@@ -73,16 +81,15 @@ export const PlotLineElement:React.FC<PlotLineElementProps> = (props: PlotLineEl
 
     const updateFigure = React.useCallback(() => {
         if (chartDiv.current && figure && figure.length > 0 && chart) {
-            if (!series.length) {
-                const lineCharts: Array<Highcharts.Series> = [];
-                const symbolList:Array<string> = [];
-                figure.forEach( plot => {
-                    const lineSeries = chart.addSeries({ ...getDefaultLineSeriesOptions(), name: plot.symbol, data: plot.data });
-                    lineCharts.push(lineSeries);
-                    symbolList.push(plot.symbol);
-                } );
-                setSeries(lineCharts);
+            if (series.length > 0) {
+                series.forEach(s => s.remove(false));
             }
+            const lineCharts: Array<Highcharts.Series> = [];
+            figure.forEach( plot => {
+                const lineSeries = chart.addSeries({ ...getDefaultLineSeriesOptions(), name: plot.symbol, data: plot.data });
+                lineCharts.push(lineSeries);
+            } );
+            setSeries(lineCharts);
         } else {
             log.debug('figure ready but no chart');
         }

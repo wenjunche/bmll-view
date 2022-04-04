@@ -1,15 +1,17 @@
 import log from 'loglevel';
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { fin } from 'openfin-adapter/src/mock';
 
 import * as Highcharts from 'highcharts';
 import { HighChartsFigure, getDefaultChartOptions, getDefaultAreaSeriesOptions, chartDateFormatter } from '../common';
+import { getSelector } from '../store'
 
 
 
 export interface PlotAreaElementProps {
     title?: string;
-    figure: Array<HighChartsFigure>;
+    metric: string
     stacking?: string;
 }
 
@@ -20,6 +22,12 @@ export const PlotAreaElement:React.FC<PlotAreaElementProps> = (props: PlotAreaEl
     const [chart, setChart] = React.useState<Highcharts.Chart>();
     const [series, setSeries] = React.useState<Array<Highcharts.Series>>([]);
     const [bounds, setBounds] = React.useState<OpenFin.Bounds>();
+    const storeFigure = useSelector(getSelector(props.metric));
+
+    React.useEffect(() => {
+        log.debug('store changed', storeFigure);
+        setFigure(storeFigure.data);
+    }, [storeFigure])
 
     React.useEffect(() => {
         const updateBounds = async() => {
@@ -43,7 +51,6 @@ export const PlotAreaElement:React.FC<PlotAreaElementProps> = (props: PlotAreaEl
     React.useEffect(() => {
         log.debug('setting figure');
         setTitle(props.title);
-        setFigure(props.figure);
     }, []);
 
 
@@ -82,16 +89,15 @@ export const PlotAreaElement:React.FC<PlotAreaElementProps> = (props: PlotAreaEl
 
     const updateFigure = React.useCallback(() => {
         if (chartDiv.current && figure && figure.length > 0 && chart) {
-            if (!series.length) {
-                const areaCharts: Array<Highcharts.Series> = [];
-                const symbolList:Array<string> = [];
-                figure.forEach( plot => {
-                    const areaSeries = chart.addSeries({ ...getDefaultAreaSeriesOptions(), name: plot.symbol, data: plot.data });
-                    areaCharts.push(areaSeries);
-                    symbolList.push(plot.symbol);
-                });
-                setSeries(areaCharts);
+            if (series.length > 0) {
+                series.forEach(s => s.remove(false));
             }
+            const areaCharts: Array<Highcharts.Series> = [];
+            figure.forEach( plot => {
+                const areaSeries = chart.addSeries({ ...getDefaultAreaSeriesOptions(), name: plot.symbol, data: plot.data });
+                areaCharts.push(areaSeries);
+            });
+            setSeries(areaCharts);
         } else {
             log.debug('figure ready but no chart');
         }

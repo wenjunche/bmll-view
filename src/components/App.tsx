@@ -3,14 +3,17 @@ import { Login } from './Login';
 import { PlotLineElement } from './PlotLineElement'
 import { PlotAreaElement } from './PlotAreaElement'
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import log from 'loglevel';
 
 import { fin } from 'openfin-adapter/src/mock';
 import { getCurrentSync, WorkspacePlatformModule } from '@openfin/workspace-platform';
 
-import { ChartViewOptions } from 'common';
-import { getAvailableMetrics, initApiClient, getTimeSeries, dataJoin, loadSecurityByInstrument, getInstrumentFigure, transformJoinedData } from '../datastore';
+import { broadcastPlotData, ChartViewOptions, listenChannelConnection } from '../common';
+import { MetricName, retrieveDataByIsin } from '../datastore';
+
+import store, { setInstrumentDataMap, selectISIN } from '../store';
 
 log.setLevel('debug');
 
@@ -30,62 +33,60 @@ const getDateRange = () => {
 
 
 async function launchView(options: ChartViewOptions ) {
-    let { figure, chartType, targetIdentity, stacking } = options;
-    if (figure) {
-        const platform: WorkspacePlatformModule = getCurrentSync();
-        const viewOptions = { url: 'http://localhost:8081/plotview.html',
-                            customData: { figure: figure, chartType, stacking }
-                            };
+    let { metric, chartType, targetIdentity, stacking } = options;
+    const platform: WorkspacePlatformModule = getCurrentSync();
+    const viewOptions = { url: 'http://localhost:8081/plotview.html',
+                        customData: { metric, chartType, stacking }
+                        };
 
-        log.debug('createView', viewOptions);
-        if (!targetIdentity) {
-            // @ts-ignore
-            const w = await fin.me.getCurrentWindow();
-            targetIdentity = w.identity;
-        }
+    log.debug('createView', viewOptions);
+    if (!targetIdentity) {
         // @ts-ignore
-        return platform.createView(viewOptions, targetIdentity);
+        const w = await fin.me.getCurrentWindow();
+        targetIdentity = w.identity;
+    }
+    // @ts-ignore
+    return platform.createView(viewOptions, targetIdentity);
+}
+
+let viewsInitialized = false;
+let viewsCreated = 0, channeClientConnected = 0;
+const initViews = async(isin: string) => {
+    if (!viewsInitialized) {
+        viewsInitialized = true;
+        const w = await (fin.me as OpenFin.View).getCurrentWindow();
+        await w.addListener('view-attached', e => {
+            log.debug('view-attached', e);
+            viewsCreated += 1;
+        });
+        listenChannelConnection((identity) => {
+            log.debug('channel client connected', identity);
+            channeClientConnected += 1;
+            if (channeClientConnected == 5) {
+                retrieveData(isin);
+            }
+        });
+        await launchView({ metric: MetricName.FillProbability, chartType: 'line' } );
+        await launchView({ metric: MetricName.TWALiquidityAroundBBO, chartType: 'line' } );
+        await launchView({ metric: MetricName.TimeAtEBBO, chartType: 'line'} );
+        await launchView({ metric: MetricName.TradeNotional, chartType: 'area'} );
+        await launchView({ metric: MetricName.TradeNotional, chartType: 'area', stacking: 'percent'} );
+    }
+    if (channeClientConnected === 5) {
+        retrieveData(isin);
     }
 }
 
-const testISINs = ['GB00BH4HKS39', 'GB00B1XZS820', 'GB0006731235', 'GB00B02J6398', 'GB0000536739', 'GB0000456144'];
-
-const retrieveData = async():Promise<ChartViewOptions | undefined> => {
-    await initApiClient();
-
-    const pyListing = await loadSecurityByInstrument({ISIN: 'GB0000456144', OPOL: 'XLON'});
-    console.log('pyListing', pyListing);
-    const metrics = await getAvailableMetrics([
-            { field: 'TWALiquidityAroundBBO', frequency: 'D', suffix: ['Ask10bpsNotional', 'Bid10bpsNotional'] },
-            { field: 'FillProbability',  frequency: 'D', level: 1 },
-            { field: 'TimeAtEBBO', frequency: 'D', suffix: ['Percentage']},
-            { field: 'Spread', frequency: 'D', suffix: ['RelTWA'] },
-            { field: 'TradeNotional', frequency: 'D'}
-        ]
-        );
-    console.log('metrics', metrics);
-    const pySeries = await getTimeSeries(pyListing, metrics, ['2022-02-28', '2022-03-28']);
-    log.debug('pySeries', pySeries);
-    const joined = dataJoin(pyListing, pySeries);
-    log.debug('joined', joined);
-    const plot = transformJoinedData(joined, metrics.map(m => m.field));
-    log.debug('plot', plot);
-
-    if (plot.size > 0) {
-        launchView({ figure: getInstrumentFigure(plot, 'FillProbability|1'), chartType: 'line' } );
-        launchView({ figure: getInstrumentFigure(plot, 'TWALiquidityAroundBBO|10bpsNotional'), chartType: 'line' } );
-        launchView({ figure: getInstrumentFigure(plot, 'TimeAtEBBO|Percentage'), chartType: 'line'} );
-        launchView({ figure: getInstrumentFigure(plot, 'TradeNotional|Lit'), chartType: 'area'} );
-        launchView({ figure: getInstrumentFigure(plot, 'TradeNotional|Lit'), chartType: 'area', stacking: 'percent'} );
-        return { figure: getInstrumentFigure(plot, 'Spread|RelTWA'), chartType: 'line' };
-    }
-    return undefined;
+const retrieveData = async(isin: string) => {
+    const data = await retrieveDataByIsin(isin);
+    store.dispatch(setInstrumentDataMap(data));
+    broadcastPlotData(data);
 }
 
 
 const App: React.FC = () => {
     const [isAuth, setIsAuth] = React.useState<boolean>(false);
-    const [options, setOptions] = React.useState<ChartViewOptions>();
+    const isin = useSelector(selectISIN);
 
     React.useEffect(() => {
         const checkAuth = async() => {
@@ -95,16 +96,13 @@ const App: React.FC = () => {
     }, []);
 
     React.useEffect(() => {
-        if (isAuth) {
+        if (isAuth && isin !== '') {
             const getFigure = async() => {
-                const firstFigure = await retrieveData();
-                if (firstFigure) {
-                    setOptions(firstFigure);
-                }
+                await initViews(isin);
             }
             getFigure();
         }
-    }, [isAuth]);
+    }, [isAuth, isin]);
 
     const onLogin = (me) => {
         if (!!me) {
@@ -115,20 +113,10 @@ const App: React.FC = () => {
 
     if (!isAuth) {
         return (<Login onLogin={onLogin}></Login>);
-    } else if (options?.figure) {
-        if (options.chartType === 'line') {
-            return (
-                <PlotLineElement key={options.figure.metric} figure={options.figure.data} title={options.figure.metric} ></PlotLineElement>
-            )
-        } else if (options.chartType === 'area') {
-            return (
-                <PlotAreaElement key={options.figure.metric} figure={options.figure.data} title={options.figure.metric} stacking={options.stacking} ></PlotAreaElement>
-            )
-        } else {
-            return (<div></div>);
-        }
     } else {
-        return (<div></div>);
+        return (
+            <PlotLineElement key={MetricName.SpreadRelTWA} title={MetricName.SpreadRelTWA} metric={MetricName.SpreadRelTWA} ></PlotLineElement>
+        )
     }
 }
 
