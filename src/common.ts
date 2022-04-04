@@ -4,6 +4,7 @@ import { LayoutExtended } from '@openfin/workspace';
 import { InstrumentDataMap, MetricName } from 'datastore';
 import store, {setISIN} from './store';
 import log from 'loglevel';
+import { Fin } from 'openfin-adapter';
 
 const lineColors = ['#8C61FF', '#FF8C4C', '#F4BF00', '#46C8F1', '#00CC88', '#FF5E60', '#FF8FB8', '#E9FF8F'];
 Highcharts.setOptions({
@@ -195,4 +196,14 @@ export const getBroadcastChannel = ():BroadcastChannel => {
 export const broadcastPlotData = (data: InstrumentDataMap) => {
     log.debug('broadcastPlotData', data);
     getBroadcastChannel().postMessage(data);
+}
+
+let viewChannel:OpenFin.ChannelProvider;
+export const listenChannelConnection = async (listener) => {
+    viewChannel = await fin.InterApplicationBus.Channel.create(BroadCastChannelName);
+    viewChannel.onConnection(listener);
+}
+
+export const connectChannel = async () => {
+    return fin.InterApplicationBus.Channel.connect(BroadCastChannelName);
 }

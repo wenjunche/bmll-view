@@ -21,9 +21,7 @@ export enum MetricName {
 
 import { HighChartsDataPoint, HighChartsFigure,InstrumentFigure }  from './common';
 
-//export type HighChartsDataMap = Map<string, HighChartsFigure>;  // MIC => TradingViewFigure
 export type HighChartsDataMap = Record<string, HighChartsFigure>;  // MIC => TradingViewFigure
-//export type InstrumentDataMap = Map<string, HighChartsDataMap>;  // Metric => TradomgViewDataMap
 export type InstrumentDataMap = Record<string, HighChartsDataMap>; // Metric => TradomgViewDataMap
 
 const excludedMics = new Set(['XEQT', 'BOTC', 'SGMX', 'SGMU']);
@@ -175,7 +173,7 @@ export const getTimeSeries = async (
         metric: metricNames
     });
 
-    return await apiclient.timeseries.query({
+    return apiclient.timeseries.query({
         objectId: listingIds,
         startDate,
         endDate,
@@ -211,11 +209,6 @@ export const transformJoinedData = (listing: Array<JoinedListingMetric>, metricL
     });
     generateCompositeSeries(map, 'TWALiquidityAroundBBO|10bpsNotional',  ['TWALiquidityAroundBBO|Ask10bpsNotional', 'TWALiquidityAroundBBO|Bid10bpsNotional']);
     generateCompositeSeries(map, 'FillProbability|1',  ['FillProbability|Ask1', 'FillProbability|Bid1']);
-    // const result:Array<InstrumentFigure> = [];
-    // map.forEach((value, key) => {
-    //     result.push( { metric: key, data: Array.from(value.values()) } );
-    // });
-    // return result;
     return map;
 }
 
@@ -265,3 +258,27 @@ const dataTransform = (dataInFigure: Array<ListingMetric>): Array<HighChartsData
      log.debug('TV data', newData);
      return newData;
 };
+
+export const retrieveDataByIsin = async(isin: string):Promise<InstrumentDataMap> => {
+    log.debug(`retrieveData ${isin}`);
+    await initApiClient();
+
+    const pyListing = await loadSecurityByInstrument({ISIN: isin, OPOL: 'XLON'});
+    console.log('pyListing', pyListing);
+    const metrics = await getAvailableMetrics([
+            { field: 'TWALiquidityAroundBBO', frequency: 'D', suffix: ['Ask10bpsNotional', 'Bid10bpsNotional'] },
+            { field: 'FillProbability',  frequency: 'D', level: 1 },
+            { field: 'TimeAtEBBO', frequency: 'D', suffix: ['Percentage']},
+            { field: 'Spread', frequency: 'D', suffix: ['RelTWA'] },
+            { field: 'TradeNotional', frequency: 'D'}
+        ]
+        );
+    console.log('metrics', metrics);
+    const pySeries = await getTimeSeries(pyListing, metrics, ['2022-02-28', '2022-03-28']);
+    log.debug('pySeries', pySeries);
+    const joined = dataJoin(pyListing, pySeries);
+    log.debug('joined', joined);
+    const data = transformJoinedData(joined, metrics.map(m => m.field));
+    log.debug('transformed', data);
+    return data;
+}

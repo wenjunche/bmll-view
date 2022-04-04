@@ -35,7 +35,7 @@ export const IsinDropdown: React.FC = () => {
             }
         </SelectComponent>
         <Button onClick={onClickHandler} >
-            Let's Rock
+            View Charts
         </Button>
         <FDC3APIInfo ref={fdc3ApiRef}/>
     </SelectContainer>);

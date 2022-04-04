@@ -8,21 +8,23 @@ import log from 'loglevel';
 import { fin } from 'openfin-adapter/src/mock';
 
 import store, { setInstrumentDataMap } from '../store';
-import { ChartViewOptions, getBroadcastChannel } from '../common';
+import { ChartViewOptions, getBroadcastChannel, connectChannel } from '../common';
 
 import '../index.css';
 
 window.addEventListener("DOMContentLoaded",  async () => {
+    getBroadcastChannel().onmessage = (event) => {
+        log.debug('broadcastChannel.onmessag', event);
+        store.dispatch(setInstrumentDataMap(event.data));
+    }    
+
     ReactDOM.render(
         <Provider store={store}>
             <App /> 
         </Provider>,
         document.getElementById('root'));
 
-    getBroadcastChannel().onmessage = (event) => {
-        log.debug('broadcastChannel.onmessag', event);
-        store.dispatch(setInstrumentDataMap(event.data));
-    }    
+    await connectChannel();
 });
 
 log.setLevel('debug');

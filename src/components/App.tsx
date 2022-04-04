@@ -10,8 +10,8 @@ import log from 'loglevel';
 import { fin } from 'openfin-adapter/src/mock';
 import { getCurrentSync, WorkspacePlatformModule } from '@openfin/workspace-platform';
 
-import { broadcastPlotData, ChartViewOptions } from '../common';
-import { getAvailableMetrics, initApiClient, getTimeSeries, dataJoin, loadSecurityByInstrument, getInstrumentFigure, transformJoinedData, MetricName } from '../datastore';
+import { broadcastPlotData, ChartViewOptions, listenChannelConnection } from '../common';
+import { MetricName, retrieveDataByIsin } from '../datastore';
 
 import store, { setInstrumentDataMap, selectISIN } from '../store';
 
@@ -50,7 +50,7 @@ async function launchView(options: ChartViewOptions ) {
 }
 
 let viewsInitialized = false;
-let viewsCreated = 0;
+let viewsCreated = 0, channeClientConnected = 0;
 const initViews = async(isin: string) => {
     if (!viewsInitialized) {
         viewsInitialized = true;
@@ -58,44 +58,29 @@ const initViews = async(isin: string) => {
         await w.addListener('view-attached', e => {
             log.debug('view-attached', e);
             viewsCreated += 1;
-            if (viewsCreated == 5) {
+        });
+        listenChannelConnection((identity) => {
+            log.debug('channel client connected', identity);
+            channeClientConnected += 1;
+            if (channeClientConnected == 5) {
                 retrieveData(isin);
             }
-                });
+        });
         await launchView({ metric: MetricName.FillProbability, chartType: 'line' } );
         await launchView({ metric: MetricName.TWALiquidityAroundBBO, chartType: 'line' } );
         await launchView({ metric: MetricName.TimeAtEBBO, chartType: 'line'} );
         await launchView({ metric: MetricName.TradeNotional, chartType: 'area'} );
         await launchView({ metric: MetricName.TradeNotional, chartType: 'area', stacking: 'percent'} );
     }
-    if (viewsCreated == 5) {
+    if (channeClientConnected === 5) {
         retrieveData(isin);
     }
 }
 
 const retrieveData = async(isin: string) => {
-    log.debug(`retrieveData ${isin}`);
-    await initApiClient();
-
-    const pyListing = await loadSecurityByInstrument({ISIN: isin, OPOL: 'XLON'});
-    console.log('pyListing', pyListing);
-    const metrics = await getAvailableMetrics([
-            { field: 'TWALiquidityAroundBBO', frequency: 'D', suffix: ['Ask10bpsNotional', 'Bid10bpsNotional'] },
-            { field: 'FillProbability',  frequency: 'D', level: 1 },
-            { field: 'TimeAtEBBO', frequency: 'D', suffix: ['Percentage']},
-            { field: 'Spread', frequency: 'D', suffix: ['RelTWA'] },
-            { field: 'TradeNotional', frequency: 'D'}
-        ]
-        );
-    console.log('metrics', metrics);
-    const pySeries = await getTimeSeries(pyListing, metrics, ['2022-02-28', '2022-03-28']);
-    log.debug('pySeries', pySeries);
-    const joined = dataJoin(pyListing, pySeries);
-    log.debug('joined', joined);
-    const plot = transformJoinedData(joined, metrics.map(m => m.field));
-    log.debug('plot', plot);
-    store.dispatch(setInstrumentDataMap(plot));
-    broadcastPlotData(plot);
+    const data = await retrieveDataByIsin(isin);
+    store.dispatch(setInstrumentDataMap(data));
+    broadcastPlotData(data);
 }
 
 
