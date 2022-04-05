@@ -259,6 +259,14 @@ const dataTransform = (dataInFigure: Array<ListingMetric>): Array<HighChartsData
      return newData;
 };
 
+const getDateRange = () => {
+    const start = new Date();
+    const end   = new Date();
+    start.setDate(start.getDate() - 30);
+    return [start.getFullYear()  + "-" + ('0' + (start.getMonth()+1)).slice(-2) + "-" + ('0' + start.getDate()).slice(-2),
+            end.getFullYear()  + "-" + ('0' + (end.getMonth()+1)).slice(-2) + "-" + ('0' + end.getDate()).slice(-2)];
+}
+
 export const retrieveDataByIsin = async(isin: string):Promise<InstrumentDataMap> => {
     log.debug(`retrieveData ${isin}`);
     await initApiClient();
@@ -274,7 +282,7 @@ export const retrieveDataByIsin = async(isin: string):Promise<InstrumentDataMap>
         ]
         );
     console.log('metrics', metrics);
-    const pySeries = await getTimeSeries(pyListing, metrics, ['2022-02-28', '2022-03-28']);
+    const pySeries = await getTimeSeries(pyListing, metrics, getDateRange());
     log.debug('pySeries', pySeries);
     const joined = dataJoin(pyListing, pySeries);
     log.debug('joined', joined);

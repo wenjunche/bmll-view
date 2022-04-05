@@ -23,15 +23,6 @@ const cognito: ICognitoUserPoolData = {
 }
 configureAmplify(cognito);
 
-const getDateRange = () => {
-    const start = new Date();
-    const end   = new Date();
-    start.setDate(start.getDate() - 30);
-    return [start.getFullYear()  + "-" + (start.getMonth()+1) + "-" + start.getDate(),
-            end.getFullYear()  + "-" + (end.getMonth()+1) + "-" + end.getDate()]
-}
-
-
 async function launchView(options: ChartViewOptions ) {
     let { metric, chartType, targetIdentity, stacking } = options;
     const platform: WorkspacePlatformModule = getCurrentSync();
