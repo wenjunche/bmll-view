@@ -8,7 +8,7 @@
     "platform": {
       "uuid": "openfin-bmll-demo",
       "icon": "http://localhost:8081/favicon.ico",
-      "autoShow": true,
+      "autoShow": false,
       "providerUrl": "http://localhost:8081/provider.html",
       "preventQuitOnLastWindowClosed": true,
       "permissions": {

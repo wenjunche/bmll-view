@@ -49,11 +49,16 @@ const initViews = async(isin: string) => {
         await w.addListener('view-attached', e => {
             log.debug('view-attached', e);
             viewsCreated += 1;
+            if (viewsCreated === 5) {
+                log.debug('applyPreset grid');
+                const layout = fin.Platform.Layout.wrapSync(w.identity);
+                layout.applyPreset({ presetType: 'grid' });
+            }
         });
         listenChannelConnection((identity) => {
             log.debug('channel client connected', identity);
             channeClientConnected += 1;
-            if (channeClientConnected == 5) {
+            if (channeClientConnected === 5) {
                 retrieveData(isin);
             }
         });
