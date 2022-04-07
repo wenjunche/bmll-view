@@ -24,6 +24,21 @@ export async function init() {
 
 const plotViewName = 'main-plot-view';
 const plotPageLayout: PageLayout = {
+    settings: {
+        reorderEnabled: false,
+        popoutWholeStack: false,
+        constrainDragToContainer: true,
+        showPopoutIcon: false,
+        showMaximiseIcon: false,
+        showCloseIcon: false,
+        constrainDragToHeaders: true,
+        // @ts-ignore
+        preventDragIn: false,
+        preventDragOut: false,
+        preventSplitterResize: true,
+        // @ts-ignore
+        reorderEnabled: false,
+    },
     content: [
         {
             type: 'stack',
@@ -36,6 +51,7 @@ const plotPageLayout: PageLayout = {
                         // @ts-ignore
                         name: plotViewName,
                         url: 'http://localhost:8081/index.html',
+                        isClosable: false
                     }
                 }
             ]

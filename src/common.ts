@@ -163,7 +163,10 @@ async function createPageWithLayout(options: BrowserWindowOptions): Promise<Page
         title,
         layout: layoutWithDetails,
         isReadOnly: false,
-        hasUnsavedChanges: true
+        hasUnsavedChanges: false,
+        closeButton: {
+            hidden: true
+        }
     };
 }
 
