@@ -4,6 +4,21 @@ import { PageLayout } from '@openfin/workspace-platform';
 import { createBrowserWindow, createViewIdentity } from './common';
 
 const selectPageLayout: PageLayout = {
+  settings: {
+    reorderEnabled: false,
+    popoutWholeStack: false,
+    constrainDragToContainer: true,
+    showPopoutIcon: false,
+    showMaximiseIcon: false,
+    showCloseIcon: false,
+    constrainDragToHeaders: true,
+    // @ts-ignore
+    preventDragIn: false,
+    preventDragOut: false,
+    preventSplitterResize: true,
+    // @ts-ignore
+    reorderEnabled: false,
+  },
   content: [
       {
           type: 'stack',
@@ -14,6 +29,11 @@ const selectPageLayout: PageLayout = {
                   componentState: {
                       identity: createViewIdentity(fin.me.uuid, 'v1'),
                       url: 'http://localhost:8081/select.html',
+                      // @ts-ignore
+                      isClosable: false,
+                      interop: {
+                        currentContextGroup: 'green'
+                      }
                   }
               }
           ]

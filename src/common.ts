@@ -135,6 +135,7 @@ export interface ChartViewOptions {
 export enum FDC3  {
     IntentName = 'ShowInstrument',
     ContextType = 'fdc3.instrument',
+    LegacyContextType = 'instrument',
 }
 
 export const createViewIdentity = (uuid: string, name: string): OpenFin.Identity => {

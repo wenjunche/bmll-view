@@ -28,7 +28,10 @@ async function launchView(options: ChartViewOptions ) {
     const platform: WorkspacePlatformModule = getCurrentSync();
     const viewOptions = { url: 'http://localhost:8081/plotview.html',
                           isClosable: false,
-                          customData: { metric, chartType, stacking }
+                          customData: { metric, chartType, stacking },
+                          interop: {
+                            currentContextGroup: 'green'
+                          }
                         };
 
     log.debug('createView', viewOptions);

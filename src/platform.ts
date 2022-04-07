@@ -51,7 +51,10 @@ const plotPageLayout: PageLayout = {
                         // @ts-ignore
                         name: plotViewName,
                         url: 'http://localhost:8081/index.html',
-                        isClosable: false
+                        isClosable: false,
+                        interop: {
+                            currentContextGroup: 'green'
+                          }
                     }
                 }
             ]
@@ -60,19 +63,31 @@ const plotPageLayout: PageLayout = {
 };
   
 let plotWindowCreated = false;
+const launchPlotWindow = async () => {
+    if (!plotWindowCreated) {
+        plotWindowCreated = true;
+        await createBrowserWindow({ title: 'Instrument Plot', layout: plotPageLayout });
+    }
+}
 
 class PlatformInteropBroker extends InteropBroker {
     async handleFiredIntent(intent: OpenFin.Intent) {
         console.log("Received request for a raised intent: ", intent);
         if (intent.name === FDC3.IntentName && intent.context.type === FDC3.ContextType) {
-            if (!plotWindowCreated) {
-                plotWindowCreated = true;
-                await createBrowserWindow({ title: 'Instrument Plot', layout: plotPageLayout });
-            }
+            await launchPlotWindow();
             const targetIdentity = { uuid: fin.me.uuid, name: plotViewName };
             log.debug(`setIntentTarget`, targetIdentity);
             super.setIntentTarget(intent, targetIdentity);
             return {source: targetIdentity.uuid}
         }
-    }    
+    }
+    async setContext({ context }: { context: OpenFin.Context;
+    }, clientIdentity: OpenFin.ClientIdentity) {
+        console.log("Setting context: ", context);
+        if (context.type === FDC3.LegacyContextType) {
+            await launchPlotWindow();
+        }
+        super.setContext({ context }, clientIdentity);
+    }
+
 }

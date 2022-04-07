@@ -30,11 +30,19 @@ const intentHandler = (ctx) => {
         // { type: FDC3.ContextType, id: { ticker: isinSelectRef.current.value} };
         store.dispatch(setISIN(ctx.id.ticker));
     }
-  };
+};
 
+const contextHandler = (ctx) => {
+    console.log("Context Received: ", ctx);
+    if (ctx.type === FDC3.LegacyContextType) {
+        store.dispatch(setISIN(ctx.id.ticker));
+    }
+};
 
 const initIntentHandler = async() => {
     log.debug(`init intent handler for ${FDC3.IntentName}`);
     // @ts-ignore
     window.fdc3.addIntentListener(FDC3.IntentName, intentHandler);
+    // @ts-ignore
+    window.fdc3.addContextListener(contextHandler);
 }
