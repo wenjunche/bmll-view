@@ -17,6 +17,7 @@ export enum MetricName {
     TimeAtEBBO = 'TimeAtEBBO|Percentage',
     TradeNotional = 'TradeNotional|Lit',
     SpreadRelTWA = 'Spread|RelTWA',
+    Custom = 'Custom'  // not bmll
 }
 
 import { HighChartsDataPoint, HighChartsFigure,InstrumentFigure }  from './common';

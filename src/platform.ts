@@ -35,9 +35,7 @@ const plotPageLayout: PageLayout = {
         // @ts-ignore
         preventDragIn: false,
         preventDragOut: false,
-        preventSplitterResize: true,
-        // @ts-ignore
-        reorderEnabled: false,
+        preventSplitterResize: true,        
     },
     content: [
         {

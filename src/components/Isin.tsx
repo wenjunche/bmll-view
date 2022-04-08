@@ -24,7 +24,8 @@ export const IsinDropdown: React.FC = () => {
             // @ts-ignore
             // fdc3.raiseIntent(FDC3.IntentName, context);
             // fdc3ApiRef.current.innerText = `fdc3.raiseIntent(${FDC3.IntentName}, ${JSON.stringify(context)})`;
-            const context2 = { type: FDC3.LegacyContextType, id: { ticker: isinSelectRef.current.value} };
+            const context2 = { type: FDC3.LegacyContextType, id: { ticker: isinSelectRef.current.value,
+                                ISIN: isinSelectRef.current.value } };
             // @ts-ignore
             fdc3.broadcast(context2);
             fdc3ApiRef.current.innerText = `fdc3.broadcast(${JSON.stringify(context2)})`;

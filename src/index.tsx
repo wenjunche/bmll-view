@@ -28,14 +28,14 @@ const intentHandler = (ctx) => {
     console.log("Intent Received: ", ctx);
     if (ctx.type === FDC3.ContextType) {
         // { type: FDC3.ContextType, id: { ticker: isinSelectRef.current.value} };
-        store.dispatch(setISIN(ctx.id.ticker));
+        store.dispatch(setISIN(ctx.id.ISIN));
     }
 };
 
 const contextHandler = (ctx) => {
     console.log("Context Received: ", ctx);
     if (ctx.type === FDC3.LegacyContextType) {
-        store.dispatch(setISIN(ctx.id.ticker));
+        store.dispatch(setISIN(ctx.id.ISIN));
     }
 };
 
