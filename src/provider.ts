@@ -1,7 +1,7 @@
 import { init as initialisePlatform } from './platform';
 import { fin } from 'openfin-adapter/src/mock';
 import { PageLayout } from '@openfin/workspace-platform';
-import { createBrowserWindow, createViewIdentity } from './common';
+import { appRootUrl, createBrowserWindow, createViewIdentity } from './common';
 
 const selectPageLayout: PageLayout = {
   settings: {
@@ -28,7 +28,7 @@ const selectPageLayout: PageLayout = {
                   componentName: 'view',
                   componentState: {
                       identity: createViewIdentity(fin.me.uuid, 'v1'),
-                      url: 'http://localhost:8081/select.html',
+                      url: `${appRootUrl}/select.html`,
                       // @ts-ignore
                       isClosable: false,
                       interop: {

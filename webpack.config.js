@@ -1,6 +1,20 @@
 const path = require("path");
-  
+const webpack = require('webpack');
+
 const HtmlwebpackPlugin = require('html-webpack-plugin');
+
+const isDevServer = process.env.WEBPACK_SERVE;   // if in dev-server mode
+
+let definePlugin;
+if (!isDevServer) {
+    definePlugin = new webpack.DefinePlugin({
+        APP_ROOT_URL: JSON.stringify('https://testing-assets.openfin.co/bmll')
+    });
+} else {
+    definePlugin = new webpack.DefinePlugin({
+        APP_ROOT_URL: JSON.stringify('http://localhost:8081')
+    });
+}
 
 module.exports = {
     mode: 'development',
@@ -55,7 +69,8 @@ module.exports = {
             template: 'res/select.html',
             filename: 'select.html',
             chunks: ['isin']
-        })
+        }),
+        definePlugin
     ],
     devServer: {
         static : {

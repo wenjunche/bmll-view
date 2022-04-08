@@ -7,9 +7,9 @@
     },
     "platform": {
       "uuid": "openfin-bmll-demo",
-      "icon": "https://testing-assets.openfin.co/bmll/favicon.ico",
+      "icon": "http://localhost:8081/favicon.ico",
       "autoShow": false,
-      "providerUrl": "https://testing-assets.openfin.co/bmll/provider.html",
+      "providerUrl": "http://localhost:8081/provider.html",
       "permissions": {
       },
       "defaultWindowOptions": {

@@ -1,7 +1,7 @@
 import { init as workspacePlatformInit, BrowserInitConfig } from '@openfin/workspace-platform';
 import { InteropBroker } from "openfin-adapter/src/api/interop";
 import { PageLayout } from '@openfin/workspace-platform';
-import { FDC3, createBrowserWindow } from './common';
+import { FDC3, createBrowserWindow, appRootUrl } from './common';
 import log from 'loglevel';
 
 export async function init() {
@@ -50,7 +50,7 @@ const plotPageLayout: PageLayout = {
 //                        identity: createViewIdentity(fin.me.uuid, 'v1'),
                         // @ts-ignore
                         name: plotViewName,
-                        url: 'http://localhost:8081/index.html',
+                        url: `${appRootUrl}/index.html`,
                         isClosable: false,
                         interop: {
                             currentContextGroup: 'green'

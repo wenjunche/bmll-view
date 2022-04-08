@@ -1,7 +1,7 @@
 import * as Highcharts from 'highcharts';
 import { BrowserCreateWindowRequest, BrowserWindowModule, getCurrentSync, Page, PageWithUpdatableRuntimeAttribs, WorkspacePlatformModule, PageLayout } from '@openfin/workspace-platform';
 import { LayoutExtended } from '@openfin/workspace';
-import { InstrumentDataMap, MetricName } from 'datastore';
+import { InstrumentDataMap, MetricName } from './datastore';
 import store, {setISIN} from './store';
 import log from 'loglevel';
 import { Fin } from 'openfin-adapter';
@@ -211,3 +211,7 @@ export const listenChannelConnection = async (listener) => {
 export const connectChannel = async () => {
     return fin.InterApplicationBus.Channel.connect(BroadCastChannelName);
 }
+
+
+declare const APP_ROOT_URL: string;
+export const appRootUrl = APP_ROOT_URL; // typeof APP_ROOT_URL !== 'undefined' && APP_ROOT_URL;

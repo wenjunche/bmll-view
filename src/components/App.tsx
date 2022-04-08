@@ -15,6 +15,8 @@ import { MetricName, retrieveDataByIsin } from '../datastore';
 
 import store, { setInstrumentDataMap, selectISIN } from '../store';
 
+declare const APP_ROOT_URL:string;
+
 log.setLevel('debug');
 
 const cognito: ICognitoUserPoolData = {
@@ -26,7 +28,7 @@ configureAmplify(cognito);
 async function launchView(options: ChartViewOptions ) {
     let { metric, chartType, targetIdentity, stacking } = options;
     const platform: WorkspacePlatformModule = getCurrentSync();
-    const viewOptions = { url: 'http://localhost:8081/plotview.html',
+    const viewOptions = { url: `${APP_ROOT_URL}/plotview.html`,
                           isClosable: false,
                           customData: { metric, chartType, stacking },
                           interop: {
