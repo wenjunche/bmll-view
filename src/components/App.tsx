@@ -8,14 +8,11 @@ import { ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import log from 'loglevel';
 
 import { fin } from 'openfin-adapter/src/mock';
-import { getCurrentSync, WorkspacePlatformModule } from '@openfin/workspace-platform';
 
 import { broadcastPlotData, launchView, listenChannelConnection } from '../common';
 import { MetricName, retrieveDataByIsin } from '../datastore';
 
 import store, { setInstrumentDataMap, selectISIN } from '../store';
-
-declare const APP_ROOT_URL:string;
 
 log.setLevel('debug');
 
@@ -52,9 +49,6 @@ const initViews = async(isin: string) => {
         await launchView({ metric: MetricName.TimeAtEBBO, chartType: 'line'} );
         await launchView({ metric: MetricName.TradeNotional, chartType: 'area'} );
         await launchView({ metric: MetricName.TradeNotional, chartType: 'area', stacking: 'percent'} );
-
-        await launchView({ metric: MetricName.Custom, url: 'https://my.apps.factset.com/news-headlines/?envComm=true'} );
-        // await launchView({ metric: MetricName.Custom, url: 'https://mobile-test-phi.vercel.app/app/hello_interop.html'} );
 
     }
     if (channeClientConnected === 5) {

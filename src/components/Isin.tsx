@@ -4,6 +4,8 @@ import { createRoot } from 'react-dom/client';
 import styled from 'styled-components';
 import { fin } from 'openfin-adapter/src/mock';
 import { FDC3 } from '../common';
+import { launchView } from '../common';
+import { MetricName } from '../datastore';
 
 import '../index.css';
 
@@ -14,9 +16,21 @@ window.addEventListener("DOMContentLoaded",  async () => {
         const root = createRoot(rootElement);
         root.render(<IsinDropdown />);
     }
+
+    const w = await (fin.me as OpenFin.View).getCurrentWindow();
+    const layout = fin.Platform.Layout.wrapSync(w.identity);
+    await layout.applyPreset({ presetType: 'grid' });
+    await launchFactSet();
 });
 
 const testISINs = ['GB00BH4HKS39', 'GB00B1XZS820', 'GB0006731235', 'GB00B02J6398', 'GB0000536739', 'GB0000456144'];
+
+const launchFactSet = async() => {
+//    await launchView({ metric: MetricName.Custom, url: 'https://my.apps.factset.com/news-headlines/?envComm=true'} );
+    await launchView({ metric: MetricName.Custom, url: 'https://my.apps.factset.com/market-watch/?envComm=true'} );
+    await launchView({ metric: MetricName.Custom, url: 'https://my.apps.factset.com'} );
+    // await launchView({ metric: MetricName.Custom, url: 'https://mobile-test-phi.vercel.app/app/hello_interop.html'} );
+}
 
 export const IsinDropdown: React.FC = () => {
     const isinSelectRef = useRef<HTMLSelectElement>();
