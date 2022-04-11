@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 
 import { PlotLineElement } from './PlotLineElement'
@@ -16,13 +17,17 @@ window.addEventListener("DOMContentLoaded",  async () => {
     getBroadcastChannel().onmessage = (event) => {
         log.debug('broadcastChannel.onmessag', event);
         store.dispatch(setInstrumentDataMap(event.data));
-    }    
+    }
 
-    ReactDOM.render(
-        <Provider store={store}>
-            <App /> 
-        </Provider>,
-        document.getElementById('root'));
+    const rootElement = document.getElementById('root');
+    if (rootElement) {
+        const root = createRoot(rootElement);
+        root.render(
+            <Provider store={store}>
+                <App /> 
+            </Provider>
+        );
+    }
 
     await connectChannel();
 });

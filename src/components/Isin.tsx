@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import styled from 'styled-components';
 import { fin } from 'openfin-adapter/src/mock';
 import { FDC3 } from '../common';
@@ -8,7 +9,11 @@ import '../index.css';
 
 
 window.addEventListener("DOMContentLoaded",  async () => {
-    ReactDOM.render(<IsinDropdown />, document.getElementById('root'));
+    const rootElement = document.getElementById('root');
+    if (rootElement) {
+        const root = createRoot(rootElement);
+        root.render(<IsinDropdown />);
+    }
 });
 
 const testISINs = ['GB00BH4HKS39', 'GB00B1XZS820', 'GB0006731235', 'GB00B02J6398', 'GB0000536739', 'GB0000456144'];
