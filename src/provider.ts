@@ -11,7 +11,7 @@ const selectPageLayout: PageLayout = {
     showPopoutIcon: false,
     showMaximiseIcon: false,
     showCloseIcon: false,
-    constrainDragToHeaders: true,
+    constrainDragToHeaders: false,
     // @ts-ignore
     preventDragIn: false,
     preventDragOut: false,
@@ -30,7 +30,7 @@ const selectPageLayout: PageLayout = {
                       identity: createViewIdentity(fin.me.uuid, 'v1'),
                       url: `${appRootUrl}/select.html`,
                       // @ts-ignore
-                      isClosable: false,
+//                      isClosable: false,
                       interop: {
                         currentContextGroup: 'green'
                       }

@@ -8,14 +8,11 @@ import { ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import log from 'loglevel';
 
 import { fin } from 'openfin-adapter/src/mock';
-import { getCurrentSync, WorkspacePlatformModule } from '@openfin/workspace-platform';
 
-import { broadcastPlotData, ChartViewOptions, listenChannelConnection } from '../common';
+import { broadcastPlotData, launchView, listenChannelConnection } from '../common';
 import { MetricName, retrieveDataByIsin } from '../datastore';
 
 import store, { setInstrumentDataMap, selectISIN } from '../store';
-
-declare const APP_ROOT_URL:string;
 
 log.setLevel('debug');
 
@@ -24,27 +21,6 @@ const cognito: ICognitoUserPoolData = {
     ClientId: "66nsoe7f4fd1f2n6kaaghrjim0"
 }
 configureAmplify(cognito);
-
-async function launchView(options: ChartViewOptions ) {
-    let { metric, chartType, targetIdentity, stacking } = options;
-    const platform: WorkspacePlatformModule = getCurrentSync();
-    const viewOptions = { url: `${APP_ROOT_URL}/plotview.html`,
-                          isClosable: false,
-                          customData: { metric, chartType, stacking },
-                          interop: {
-                            currentContextGroup: 'green'
-                          }
-                        };
-
-    log.debug('createView', viewOptions);
-    if (!targetIdentity) {
-        // @ts-ignore
-        const w = await fin.me.getCurrentWindow();
-        targetIdentity = w.identity;
-    }
-    // @ts-ignore
-    return platform.createView(viewOptions, targetIdentity);
-}
 
 let viewsInitialized = false;
 let viewsCreated = 0, channeClientConnected = 0;
@@ -73,6 +49,7 @@ const initViews = async(isin: string) => {
         await launchView({ metric: MetricName.TimeAtEBBO, chartType: 'line'} );
         await launchView({ metric: MetricName.TradeNotional, chartType: 'area'} );
         await launchView({ metric: MetricName.TradeNotional, chartType: 'area', stacking: 'percent'} );
+
     }
     if (channeClientConnected === 5) {
         retrieveData(isin);

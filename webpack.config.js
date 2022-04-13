@@ -1,20 +1,37 @@
 const path = require("path");
+const fs = require('fs');
 const webpack = require('webpack');
 
 const HtmlwebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require("copy-webpack-plugin");
 
 const isDevServer = process.env.WEBPACK_SERVE;   // if in dev-server mode
+const localPort = 8081;
+const localUrl = `http://localhost:${localPort}`;
+const removeUrl = 'https://testing-assets.openfin.co/bmll';
 
-let definePlugin;
+let definePlugin, rootUrl;
 if (!isDevServer) {
+    rootUrl = removeUrl;
     definePlugin = new webpack.DefinePlugin({
-        APP_ROOT_URL: JSON.stringify('https://testing-assets.openfin.co/bmll')
+        APP_ROOT_URL: JSON.stringify(removeUrl)
     });
 } else {
+    rootUrl = localUrl;
     definePlugin = new webpack.DefinePlugin({
-        APP_ROOT_URL: JSON.stringify('http://localhost:8081')
+        APP_ROOT_URL: JSON.stringify(localUrl)
     });
 }
+
+const copyPlugin = new CopyPlugin({
+    patterns: [
+      { from: path.join(__dirname, 'res', 'app.json'), to: path.join(__dirname, 'dist'),
+        transform(content, absoluteFrom) {
+            return content.toString().replaceAll('{APP_ROOT_URL}', rootUrl) ;
+        },    
+      }
+    ],
+});
 
 module.exports = {
     mode: 'development',
@@ -70,14 +87,21 @@ module.exports = {
             filename: 'select.html',
             chunks: ['isin']
         }),
-        definePlugin
+        definePlugin,
+        copyPlugin
     ],
     devServer: {
         static : {
             directory : path.join(__dirname, 'res')
         },
-        port: 8081,
+        port: localPort,
         hot: true,
-        // open: ['./index.html']
+        setupMiddlewares: (middlewares, devServer) => {
+            devServer.app.get('/app.json', (_, response) => {
+                const data = fs.readFileSync(path.join(__dirname, 'res', 'app.json'), {encoding:'utf8', flag:'r'});
+                response.send(data.replaceAll('{APP_ROOT_URL}', rootUrl));
+            });
+            return middlewares;
+        }
     }
 };

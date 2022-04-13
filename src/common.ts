@@ -125,17 +125,40 @@ export const getDefaultAreaSeriesOptions = ():Highcharts.SeriesLineOptions => {
 
 
 export interface ChartViewOptions {
+    url?: string;
     metric: MetricName;
-    chartType: 'line' | 'area';
-    targetIdentity?: OpenFin.Identity;
+    chartType?: 'line' | 'area';
     stacking?: string;
+    targetIdentity?: OpenFin.Identity;
+}
+
+export const launchView = async (options: ChartViewOptions ) => {
+    let { metric, chartType, targetIdentity, stacking } = options;
+    const platform: WorkspacePlatformModule = getCurrentSync();
+    const viewOptions = { url: options.url || `${APP_ROOT_URL}/plotview.html`,
+                          isClosable: false,
+                          customData: { metric, chartType, stacking },
+                          interop: {
+                            currentContextGroup: 'green'
+                          }
+                        };
+
+    log.debug('createView', viewOptions);
+    if (!targetIdentity) {
+        // @ts-ignore
+        const w = await fin.me.getCurrentWindow();
+        targetIdentity = w.identity;
+    }
+    // @ts-ignore
+    return platform.createView(viewOptions, targetIdentity);
 }
 
 
 export enum FDC3  {
     IntentName = 'ShowInstrument',
     ContextType = 'fdc3.instrument',
-    LegacyContextType = 'instrument',
+//    LegacyContextType = 'instrument',
+    LegacyContextType = 'fdc3.instrument',
 }
 
 export const createViewIdentity = (uuid: string, name: string): OpenFin.Identity => {
