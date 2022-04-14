@@ -1,5 +1,10 @@
-import React, { useRef } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useRef, useState } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import { ColDef, CellClickedEvent, GridReadyEvent, FirstDataRenderedEvent } from 'ag-grid-community';
+
+import 'ag-grid-community/dist/styles/ag-grid.css';
+import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
+
 import { createRoot } from 'react-dom/client';
 import styled from 'styled-components';
 import { fin } from 'openfin-adapter/src/mock';
@@ -23,18 +28,49 @@ window.addEventListener("DOMContentLoaded",  async () => {
     await launchFactSet();
 });
 
-const testISINs = ['GB00BH4HKS39', 'GB00B1XZS820', 'GB0006731235', 'GB00B02J6398', 'GB0000536739', 'GB0000456144'];
+const securities = [
+    { name: 'VODAFONE GROUP PLC', isin: 'GB00BH4HKS39'}, 
+    { name: 'ANGLO AMERICAN PLC', isin: 'GB00B1XZS820'}, 
+    { name: 'ASSOCIATED BRITISH FOODS PLC', isin: 'GB0006731235'}, 
+    { name: 'ADMIRAL GROUP PLC', isin: 'GB00B02J6398'}, 
+    { name: 'ASHTEAD GROUP PLC', isin: 'GB0000536739'}, 
+    { name: 'ANTOFAGASTA PLC', isin: 'GB0000456144'} ];
 
 const launchFactSet = async() => {
 //    await launchView({ metric: MetricName.Custom, url: 'https://my.apps.factset.com/news-headlines/?envComm=true'} );
-    await launchView({ metric: MetricName.Custom, url: 'https://my.apps.factset.com/market-watch/?envComm=true'} );
-    await launchView({ metric: MetricName.Custom, url: 'https://my.apps.factset.com'} );
-    // await launchView({ metric: MetricName.Custom, url: 'https://mobile-test-phi.vercel.app/app/hello_interop.html'} );
+    // await launchView({ metric: MetricName.Custom, url: 'https://my.apps.factset.com/market-watch/?envComm=true'} );
+    // await launchView({ metric: MetricName.Custom, url: 'https://my.apps.factset.com'} );
+    // await launchView({ metric: MetricName.Custom, url: 'https://cyhir.csb.app/chart.publisher.html'} );
 }
 
 export const IsinDropdown: React.FC = () => {
     const isinSelectRef = useRef<HTMLSelectElement>();
     const fdc3ApiRef = useRef<HTMLSelectElement>();
+    const [columnDefs] = useState<Array<ColDef>>([
+        { field: 'name', resizable: true, autoHeight: true  },
+        { field: 'isin', resizable: true, autoHeight: true  },
+    ]);
+    const [rowData] = useState(securities);
+
+    const onCellClicked = (params: CellClickedEvent) => {
+        console.log('Cell was clicked', params);
+        const context2 = { type: FDC3.LegacyContextType, id: { ISIN: params.data.isin } };
+        // @ts-ignore
+        fdc3.broadcast(context2);
+        if (fdc3ApiRef.current) {
+            fdc3ApiRef.current.innerText = `fdc3.broadcast(${JSON.stringify(context2)})`;
+        }
+}
+
+    const onGridReady = (event: GridReadyEvent) => {
+        event.api.sizeColumnsToFit();
+        event.columnApi.autoSizeAllColumns();
+        console.log(event.api.getDataAsCsv());
+    }
+
+    const onFirstDataRendered = (event: FirstDataRenderedEvent) => {
+        event.columnApi.autoSizeAllColumns();
+    }
 
     const onClickHandler = () => {
         if (isinSelectRef?.current && fdc3ApiRef?.current) {
@@ -51,25 +87,33 @@ export const IsinDropdown: React.FC = () => {
         }
     }
 
-    return (<SelectContainer>
-        <SelectComponent ref={isinSelectRef}>
-            { testISINs.map(isin => (
-                    <option key={isin} value={isin}>{isin}</option>
-                ))
-            }
-        </SelectComponent>
-        <Button onClick={onClickHandler} >
+    return (
+        <div className='ag-theme-alpine' style={{ height: 360, width: 500, position: 'absolute', top: '20%', left: '20%' }}>
+        {/* <SelectComponent ref={isinSelectRef}> */}
+            <AgGridReact
+               rowData={rowData}
+               columnDefs={columnDefs}
+               onCellClicked={onCellClicked}
+               onGridReady={onGridReady}
+               onFirstDataRendered={onFirstDataRendered}
+               suppressColumnVirtualisation={false}
+            />                
+
+        {/* </SelectComponent> */}
+        {/* <Button onClick={onClickHandler} >
             View Charts
-        </Button>
+        </Button> */}
         <FDC3APIInfo ref={fdc3ApiRef}/>
-    </SelectContainer>);
+    </div>);
 }
 
 const SelectContainer = styled.div`
     position: absolute;
     top: 20%;
-    left: 20%;    
-    
+    left: 20%;
+    width: 400px;
+    height: 400px;
+    className: 'ag-theme-alpine';
 `;
 
 const SelectComponent = styled.select`
