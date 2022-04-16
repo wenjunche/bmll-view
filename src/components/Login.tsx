@@ -39,7 +39,7 @@ export const Login: React.FC<{ onLogin?: (user: User) => void }> = ({ onLogin })
                                 },
                                 {
                                     pattern: /^.*@.*$/,
-                                    message: 'Your username should be your name, not email address.',
+                                    message: 'Your username should be your email address, not name.',
                                 },
                             ]}
                         >
