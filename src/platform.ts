@@ -25,16 +25,16 @@ export async function init() {
 const plotViewName = 'main-plot-view';
 const plotPageLayout: PageLayout = {
     settings: {
-        reorderEnabled: false,
+        reorderEnabled: true,
         popoutWholeStack: false,
         constrainDragToContainer: true,
         showPopoutIcon: false,
         showMaximiseIcon: false,
         showCloseIcon: false,
-        constrainDragToHeaders: true,
+        constrainDragToHeaders: false,
         // @ts-ignore
-        preventDragIn: false,
-        preventDragOut: false,
+        preventDragIn: true,
+        preventDragOut: true,
         preventSplitterResize: true,        
     },
     content: [

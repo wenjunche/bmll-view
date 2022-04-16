@@ -20,15 +20,15 @@ window.addEventListener("DOMContentLoaded",  async () => {
     const w = await (fin.me as OpenFin.View).getCurrentWindow();
     const layout = fin.Platform.Layout.wrapSync(w.identity);
     await layout.applyPreset({ presetType: 'grid' });
-    await launchFactSet();
+    await launchPartnerApp();
 });
 
 const testISINs = ['GB00BH4HKS39', 'GB00B1XZS820', 'GB0006731235', 'GB00B02J6398', 'GB0000536739', 'GB0000456144'];
 
-const launchFactSet = async() => {
+const launchPartnerApp = async() => {
 //    await launchView({ metric: MetricName.Custom, url: 'https://my.apps.factset.com/news-headlines/?envComm=true'} );
-    await launchView({ metric: MetricName.Custom, url: 'https://my.apps.factset.com/market-watch/?envComm=true'} );
-    await launchView({ metric: MetricName.Custom, url: 'https://my.apps.factset.com'} );
+    // await launchView({ metric: MetricName.Custom, url: 'https://my.apps.factset.com/market-watch/?envComm=true'} );
+    // await launchView({ metric: MetricName.Custom, url: 'https://my.apps.factset.com'} );
     // await launchView({ metric: MetricName.Custom, url: 'https://mobile-test-phi.vercel.app/app/hello_interop.html'} );
 }
 

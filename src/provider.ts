@@ -5,7 +5,7 @@ import { appRootUrl, createBrowserWindow, createViewIdentity } from './common';
 
 const selectPageLayout: PageLayout = {
   settings: {
-    reorderEnabled: false,
+    reorderEnabled: true,
     popoutWholeStack: false,
     constrainDragToContainer: true,
     showPopoutIcon: false,
@@ -13,12 +13,10 @@ const selectPageLayout: PageLayout = {
     showCloseIcon: false,
     constrainDragToHeaders: false,
     // @ts-ignore
-    preventDragIn: false,
-    preventDragOut: false,
-    preventSplitterResize: true,
-    // @ts-ignore
-    reorderEnabled: false,
-  },
+    preventDragIn: true,
+    preventDragOut: true,
+    preventSplitterResize: true,        
+},
   content: [
       {
           type: 'stack',
