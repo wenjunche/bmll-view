@@ -23,13 +23,22 @@ window.addEventListener("DOMContentLoaded",  async () => {
     await launchPartnerApp();
 });
 
-const testISINs = ['GB00BH4HKS39', 'GB00B1XZS820', 'GB0006731235', 'GB00B02J6398', 'GB0000536739', 'GB0000456144'];
+// const testISINs = ['GB00BH4HKS39', 'GB00B1XZS820', 'GB0006731235', 'GB00B02J6398', 'GB0000536739', 'GB0000456144'];
+const testSecurities = [
+    {"type":FDC3.LegacyContextType,"name":"Vodafone Group Plc","id":{"ticker":"VOD","ISIN":"GB00BH4HKS39"}},
+    {"type":FDC3.LegacyContextType,"name":"Anglo American plc","id":{"ticker":"AAL","ISIN":"GB00B1XZS820"}},
+    {"type":FDC3.LegacyContextType,"name":"Associated British Foods plc","id":{"ticker":"ABF","ISIN":"GB0006731235"}},
+    {"type":FDC3.LegacyContextType,"name":"Admiral Group plc","id":{"ticker":"ADM","ISIN":"GB00B02J6398"}},
+    {"type":FDC3.LegacyContextType,"name":"Ashtead Group plc","id":{"ticker":"AHT","ISIN":"GB0000536739"}},
+    {"type":FDC3.LegacyContextType,"name":"Antofagasta plc","id":{"ticker":"ANTO","ISIN":"GB0000456144"}}
+]
 
 const launchPartnerApp = async() => {
 //    await launchView({ metric: MetricName.Custom, url: 'https://my.apps.factset.com/news-headlines/?envComm=true'} );
     // await launchView({ metric: MetricName.Custom, url: 'https://my.apps.factset.com/market-watch/?envComm=true'} );
     // await launchView({ metric: MetricName.Custom, url: 'https://my.apps.factset.com'} );
     // await launchView({ metric: MetricName.Custom, url: 'https://mobile-test-phi.vercel.app/app/hello_interop.html'} );
+    await launchView({ metric: MetricName.Custom, url: 'https://fdc3.finos.org/toolbox/fdc3-workbench/'} );
 }
 
 export const IsinDropdown: React.FC = () => {
@@ -39,22 +48,20 @@ export const IsinDropdown: React.FC = () => {
     const onClickHandler = () => {
         if (isinSelectRef?.current && fdc3ApiRef?.current) {
             console.log(isinSelectRef.current.value);
-            const context = { type: FDC3.ContextType, id: { ticker: isinSelectRef.current.value} };
+            const context = testSecurities.filter(v => v.id.ISIN === isinSelectRef.current?.value)[0]
             // @ts-ignore
             // fdc3.raiseIntent(FDC3.IntentName, context);
             // fdc3ApiRef.current.innerText = `fdc3.raiseIntent(${FDC3.IntentName}, ${JSON.stringify(context)})`;
-            const context2 = { type: FDC3.LegacyContextType, id: { ticker: isinSelectRef.current.value,
-                                ISIN: isinSelectRef.current.value } };
             // @ts-ignore
-            fdc3.broadcast(context2);
-            fdc3ApiRef.current.innerText = `fdc3.broadcast(${JSON.stringify(context2)})`;
+            fdc3.broadcast(context);
+            fdc3ApiRef.current.innerText = `fdc3.broadcast(${JSON.stringify(context)})`;
         }
     }
 
     return (<SelectContainer>
         <SelectComponent ref={isinSelectRef}>
-            { testISINs.map(isin => (
-                    <option key={isin} value={isin}>{isin}</option>
+            { testSecurities.map(sec => (
+                    <option key={sec.id.ISIN} value={sec.id.ISIN}>{sec.id.ISIN}</option>
                 ))
             }
         </SelectComponent>
