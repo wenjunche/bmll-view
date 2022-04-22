@@ -9,10 +9,10 @@ import log from 'loglevel';
 
 import { fin } from 'openfin-adapter/src/mock';
 
-import { broadcastPlotData, launchView, listenChannelConnection } from '../common';
-import { MetricName, retrieveDataByIsin } from '../datastore';
+import { broadcastPlotData, FDC3Instrument, launchView, listenChannelConnection } from '../common';
+import { MetricName, retrieveDataByIsin, InstrumentDataMap, retrieveDataByTicker } from '../datastore';
 
-import store, { setInstrumentDataMap, selectISIN } from '../store';
+import store, { setInstrumentDataMap, selectISIN, selectInstrument } from '../store';
 
 log.setLevel('debug');
 
@@ -24,7 +24,7 @@ configureAmplify(cognito);
 
 let viewsInitialized = false;
 let viewsCreated = 0, channeClientConnected = 0;
-const initViews = async(isin: string) => {
+const initViews = async(instrument: FDC3Instrument) => {
     if (!viewsInitialized) {
         viewsInitialized = true;
         const w = await (fin.me as OpenFin.View).getCurrentWindow();
@@ -41,7 +41,7 @@ const initViews = async(isin: string) => {
             log.debug('channel client connected', identity);
             channeClientConnected += 1;
             if (channeClientConnected === 5) {
-                retrieveData(isin);
+                retrieveData(instrument);
             }
         });
         await launchView({ metric: MetricName.FillProbability, chartType: 'line' } );
@@ -52,12 +52,18 @@ const initViews = async(isin: string) => {
 
     }
     if (channeClientConnected === 5) {
-        retrieveData(isin);
+        retrieveData(instrument);
     }
 }
 
-const retrieveData = async(isin: string) => {
-    const data = await retrieveDataByIsin(isin);
+const retrieveData = async(instrument: FDC3Instrument) => {
+    let data:InstrumentDataMap = {};
+    if (instrument.id.ISIN) {
+        data = await retrieveDataByIsin(instrument.id.ISIN);
+    }
+    else if (instrument.id.ticker) {
+        data = await retrieveDataByTicker(instrument.id.ticker);
+    }
     store.dispatch(setInstrumentDataMap(data));
     broadcastPlotData(data);
 }
@@ -65,7 +71,7 @@ const retrieveData = async(isin: string) => {
 
 const App: React.FC = () => {
     const [isAuth, setIsAuth] = React.useState<boolean>(false);
-    const isin = useSelector(selectISIN);
+    const instrument = useSelector(selectInstrument);
 
     React.useEffect(() => {
         const checkAuth = async() => {
@@ -75,13 +81,13 @@ const App: React.FC = () => {
     }, []);
 
     React.useEffect(() => {
-        if (isAuth && isin !== '') {
+        if (isAuth && instrument) {
             const getFigure = async() => {
-                await initViews(isin);
+                await initViews(instrument);
             }
             getFigure();
         }
-    }, [isAuth, isin]);
+    }, [isAuth, instrument]);
 
     const onLogin = (me) => {
         if (!!me) {

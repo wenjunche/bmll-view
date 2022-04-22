@@ -51,11 +51,14 @@ export const loadSecurityBySymbol = async(symbol: string, isPrimary = false): Pr
     return filteredListings;
 }
 
-export type PartInstrument =  Partial<Instrument>;
-export const loadSecurityByInstrument = async(instrument: PartInstrument): Promise<Listing[]> => {
-    const query = { ISIN: [instrument.ISIN], OPOL: [instrument.OPOL] };
-    const listings = await apiclient.reference.query<Listing>({ ...query }, false);
+type PartInstrument =  Partial<Instrument>;
+const loadSecurityByInstrument = async(query: any, coerceStringsToArrays?: boolean): Promise<Listing[]> => {
+    const listings = await apiclient.reference.query<Listing>({ ...query }, coerceStringsToArrays);
     return listings.filter(d => !excludedMics.has(d.MIC))
+}
+
+const loadSecurityByInstrumentNoFilter = async(query: any, coerceStringsToArrays?: boolean): Promise<Listing[]> => {
+    return await apiclient.reference.query<Listing>({ ...query }, coerceStringsToArrays);
 }
 
 
@@ -269,10 +272,10 @@ const getDateRange = () => {
 }
 
 export const retrieveDataByIsin = async(isin: string):Promise<InstrumentDataMap> => {
-    log.debug(`retrieveData ${isin}`);
+    log.debug(`retrieveDataByIsin ${isin}`);
     await initApiClient();
-
-    const pyListing = await loadSecurityByInstrument({ISIN: isin, OPOL: 'XLON'});
+//    const query = { ISIN: [instrument.ISIN], OPOL: [instrument.OPOL] };
+    const pyListing = await loadSecurityByInstrument({ISIN: [isin], OPOL: ['XLON']}, false);
     console.log('pyListing', pyListing);
     const metrics = await getAvailableMetrics([
             { field: 'TWALiquidityAroundBBO', frequency: 'D', suffix: ['Ask10bpsNotional', 'Bid10bpsNotional'] },
@@ -290,4 +293,36 @@ export const retrieveDataByIsin = async(isin: string):Promise<InstrumentDataMap>
     const data = transformJoinedData(joined, metrics.map(m => m.field));
     log.debug('transformed', data);
     return data;
+}
+
+export const retrieveDataByTicker = async(ticker: string):Promise<InstrumentDataMap> => {
+    log.debug(`retrieveDataByTicker ${ticker}`);
+    await initApiClient();
+
+    const tickerListing = await loadSecurityByInstrumentNoFilter({Ticker: ticker, IsPrimary: 'True', IsAlive: 'True'}, true);
+    console.log('tickerListing', tickerListing);
+    if (tickerListing.length > 0) {
+        // hard-code tickerListing[0]
+        const pyListing = await loadSecurityByInstrumentNoFilter({objectIds: [tickerListing[0].InstrumentId], objectType: 'Instrument'}, false);
+
+        const metrics = await getAvailableMetrics([
+                { field: 'TWALiquidityAroundBBO', frequency: 'D', suffix: ['Ask10bpsNotional', 'Bid10bpsNotional'] },
+                { field: 'FillProbability',  frequency: 'D', level: 1 },
+                { field: 'TimeAtEBBO', frequency: 'D', suffix: ['Percentage']},
+                { field: 'Spread', frequency: 'D', suffix: ['RelTWA'] },
+                { field: 'TradeNotional', frequency: 'D'}
+            ]
+            );
+        console.log('metrics', metrics);
+        const pySeries = await getTimeSeries(pyListing, metrics, getDateRange());
+        log.debug('pySeries', pySeries);
+        const joined = dataJoin(pyListing, pySeries);
+        log.debug('joined', joined);
+        const data = transformJoinedData(joined, metrics.map(m => m.field));
+        log.debug('transformed', data);
+        return data;
+    } else {
+        console.warn('no tickerListing');
+        return {};
+    }
 }

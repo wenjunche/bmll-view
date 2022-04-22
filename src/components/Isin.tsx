@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 import styled from 'styled-components';
 import { fin } from 'openfin-adapter/src/mock';
 import { FDC3 } from '../common';
-import { launchView } from '../common';
+import { launchView, FDC3Instrument } from '../common';
 import { MetricName } from '../datastore';
 
 import '../index.css';
@@ -23,14 +23,28 @@ window.addEventListener("DOMContentLoaded",  async () => {
     await launchPartnerApp();
 });
 
-// const testISINs = ['GB00BH4HKS39', 'GB00B1XZS820', 'GB0006731235', 'GB00B02J6398', 'GB0000536739', 'GB0000456144'];
-const testSecurities = [
-    {"type":FDC3.LegacyContextType,"name":"Vodafone Group Plc","id":{"ticker":"VOD","ISIN":"GB00BH4HKS39"}},
-    {"type":FDC3.LegacyContextType,"name":"Anglo American plc","id":{"ticker":"AAL","ISIN":"GB00B1XZS820"}},
-    {"type":FDC3.LegacyContextType,"name":"Associated British Foods plc","id":{"ticker":"ABF","ISIN":"GB0006731235"}},
-    {"type":FDC3.LegacyContextType,"name":"Admiral Group plc","id":{"ticker":"ADM","ISIN":"GB00B02J6398"}},
-    {"type":FDC3.LegacyContextType,"name":"Ashtead Group plc","id":{"ticker":"AHT","ISIN":"GB0000536739"}},
-    {"type":FDC3.LegacyContextType,"name":"Antofagasta plc","id":{"ticker":"ANTO","ISIN":"GB0000456144"}}
+const testSecurities: FDC3Instrument[] = [
+    { type: FDC3.ContextType, name: "Vodafone Group Plc", id: {ticker:"VOD",ISIN:"GB00BH4HKS39"}},
+    { type: FDC3.ContextType, name: "Anglo American plc", id: {"ticker":"AAL", ISIN:"GB00B1XZS820"}},
+    { type: FDC3.ContextType, name: "Associated British Foods plc", id:{"ticker":"ABF", ISIN:"GB0006731235"}},
+    { type: FDC3.ContextType, name: "Admiral Group plc", id: {"ticker":"ADM", ISIN: "GB00B02J6398"}},
+    { type: FDC3.ContextType, name: "Ashtead Group plc", id: {"ticker":"AHT", ISIN: "GB0000536739"}},
+    { type: FDC3.ContextType, name: "Antofagasta plc", id:{"ticker":"ANTO", ISIN:"GB0000456144"}},
+    { type: FDC3.ContextType, name: "AAL", id: {ticker:"AAL"}},
+    { type: FDC3.ContextType, name: "AZN", id: {ticker:"AZN"}},
+    { type: FDC3.ContextType, name: "BARC", id: {ticker:"BARC" }},
+    { type: FDC3.ContextType, name: "BHP", id: {ticker:"BHP" }},
+    { type: FDC3.ContextType, name: "DGE", id: {ticker:"DGE" }},
+    { type: FDC3.ContextType, name: "GLEN", id: {ticker:"GLEN" }},
+    { type: FDC3.ContextType, name: "GSK", id: {ticker:"GSK" }},
+    { type: FDC3.ContextType, name: "HSBA", id: {ticker:"HSBA" }},
+    { type: FDC3.ContextType, name: "LLOY", id: {ticker:"LLOY" }},
+    { type: FDC3.ContextType, name: "LSEG", id: {ticker:"LSEG" }},
+    { type: FDC3.ContextType, name: "PRU", id: {ticker:"PRU" }},
+    { type: FDC3.ContextType, name: "RKT", id: {ticker:"RKT" }},
+    { type: FDC3.ContextType, name: "RDSA", id: {ticker:"RDSA" }},
+    { type: FDC3.ContextType, name: "REL", id: {ticker:"REL" }},
+    { type: FDC3.ContextType, name: "ULVR", id: {ticker:"ULVR" }},
 ]
 
 const launchPartnerApp = async() => {
@@ -48,7 +62,7 @@ export const IsinDropdown: React.FC = () => {
     const onClickHandler = () => {
         if (isinSelectRef?.current && fdc3ApiRef?.current) {
             console.log(isinSelectRef.current.value);
-            const context = testSecurities.filter(v => v.id.ISIN === isinSelectRef.current?.value)[0]
+            const context = testSecurities.filter(v => v.id.ticker === isinSelectRef.current?.value)[0]
             // @ts-ignore
             // fdc3.raiseIntent(FDC3.IntentName, context);
             // fdc3ApiRef.current.innerText = `fdc3.raiseIntent(${FDC3.IntentName}, ${JSON.stringify(context)})`;
@@ -61,7 +75,7 @@ export const IsinDropdown: React.FC = () => {
     return (<SelectContainer>
         <SelectComponent ref={isinSelectRef}>
             { testSecurities.map(sec => (
-                    <option key={sec.id.ISIN} value={sec.id.ISIN}>{sec.id.ISIN}</option>
+                    <option key={sec.id.ISIN} value={sec.id.ticker}>{sec.id.ISIN?sec.id.ISIN:sec.id.ticker}</option>
                 ))
             }
         </SelectComponent>

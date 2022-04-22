@@ -2,9 +2,7 @@ import * as Highcharts from 'highcharts';
 import { BrowserCreateWindowRequest, BrowserWindowModule, getCurrentSync, Page, PageWithUpdatableRuntimeAttribs, WorkspacePlatformModule, PageLayout } from '@openfin/workspace-platform';
 import { LayoutExtended } from '@openfin/workspace';
 import { InstrumentDataMap, MetricName } from './datastore';
-import store, {setISIN} from './store';
 import log from 'loglevel';
-import { Fin } from 'openfin-adapter';
 
 const lineColors = ['#8C61FF', '#FF8C4C', '#F4BF00', '#46C8F1', '#00CC88', '#FF5E60', '#FF8FB8', '#E9FF8F'];
 Highcharts.setOptions({
@@ -160,6 +158,16 @@ export enum FDC3  {
 //    LegacyContextType = 'instrument',
     LegacyContextType = 'fdc3.instrument',
 }
+
+export interface FDC3Instrument  {
+    type: FDC3.ContextType;
+    name: string;
+    id: {
+        ticker: string;
+        ISIN?: string;
+    }
+}
+
 
 export const createViewIdentity = (uuid: string, name: string): OpenFin.Identity => {
     const viewIdentity: OpenFin.Identity = { uuid: uuid, name: `${window.crypto.randomUUID()}-${name}` };
