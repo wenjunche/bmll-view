@@ -10,7 +10,7 @@ import { FDC3 } from './common';
 
 import App from './components/App';
 
-import store, { setInstrument, setISIN } from './store';
+import store, { setInstrument } from './store';
 
 import './index.css';
 

@@ -4,18 +4,16 @@ import { useSelector } from 'react-redux';
 import { fin } from 'openfin-adapter/src/mock';
 
 import * as Highcharts from 'highcharts';
-import { HighChartsFigure, getDefaultChartOptions, getDefaultLineSeriesOptions, chartDateFormatter } from '../common';
+import { getDefaultChartOptions, getDefaultLineSeriesOptions, chartDateFormatter, InstrumentFigure, getDefaultChartTitleOptions, getChartTitle } from '../common';
 import { getSelector } from '../store'
 
 export interface PlotLineElementProps {
-    title?: string;
     metric: string
 }
 
 export const PlotLineElement:React.FC<PlotLineElementProps> = (props: PlotLineElementProps) => {
     const chartDiv = React.createRef<HTMLDivElement>();
-    const [title, setTitle] = React.useState<string>();
-    const [figure, setFigure] = React.useState<Array<HighChartsFigure>>([]);
+    const [figure, setFigure] = React.useState<InstrumentFigure>();
     const [chart, setChart] = React.useState<Highcharts.Chart>();
     const [series, setSeries] = React.useState<Array<Highcharts.Series>>([]);
     const [bounds, setBounds] = React.useState<OpenFin.Bounds>();
@@ -23,7 +21,7 @@ export const PlotLineElement:React.FC<PlotLineElementProps> = (props: PlotLineEl
 
     React.useEffect(() => {
         log.debug('store changed', storeFigure);
-        setFigure(storeFigure.data);
+        setFigure(storeFigure);
     }, [storeFigure])
 
     React.useEffect(() => {
@@ -45,12 +43,6 @@ export const PlotLineElement:React.FC<PlotLineElementProps> = (props: PlotLineEl
         });        
 
     }, []);
-    
-    React.useEffect(() => {
-        log.debug('setting figure');
-        setTitle(props.title);
-    }, []);
-
 
     React.useEffect(() => {
         const configChart = async() => {
@@ -61,8 +53,6 @@ export const PlotLineElement:React.FC<PlotLineElementProps> = (props: PlotLineEl
                         height: bounds.height,
                         width: bounds.width
                     }
-                    //@ts-ignore
-                    options.title.text = title;
                     //@ts-ignore
                     options.xAxis.labels.formatter = chartDateFormatter;
                     const cc = Highcharts.chart(chartDiv.current, options);
@@ -80,18 +70,23 @@ export const PlotLineElement:React.FC<PlotLineElementProps> = (props: PlotLineEl
 
 
     const updateFigure = React.useCallback(() => {
-        if (chartDiv.current && figure && figure.length > 0 && chart) {
+        if (chartDiv.current && figure && figure.data && chart) {
             if (series.length > 0) {
                 series.forEach(s => s.remove(false));
             }
             const lineCharts: Array<Highcharts.Series> = [];
-            figure.forEach( plot => {
+            figure.data.forEach( plot => {
                 const lineSeries = chart.addSeries({ ...getDefaultLineSeriesOptions(), name: plot.symbol, data: plot.data });
                 lineCharts.push(lineSeries);
             } );
             setSeries(lineCharts);
         } else {
             log.debug('figure ready but no chart');
+        }
+        if (chart && figure) {
+            const charTitle = getDefaultChartTitleOptions();
+            charTitle.text = getChartTitle(figure.instrument, figure.metric);
+            chart.setTitle(charTitle)
         }
     }, [chartDiv.current, figure, chart]);
 

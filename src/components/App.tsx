@@ -9,10 +9,10 @@ import log from 'loglevel';
 
 import { fin } from 'openfin-adapter/src/mock';
 
-import { broadcastPlotData, FDC3Instrument, launchView, listenChannelConnection, getChartTitle } from '../common';
+import { broadcastPlotData, FDC3Instrument, launchView, listenChannelConnection, getChartTitle, InstrumentPackage } from '../common';
 import { MetricName, retrieveDataByIsin, InstrumentDataMap, retrieveDataByTicker } from '../datastore';
 
-import store, { setInstrumentDataMap, selectISIN, selectInstrument } from '../store';
+import store, { setInstrumentPackage, selectInstrument } from '../store';
 
 log.setLevel('debug');
 
@@ -57,6 +57,7 @@ const initViews = async(instrument: FDC3Instrument) => {
 }
 
 const retrieveData = async(instrument: FDC3Instrument) => {
+    broadcastPlotData({ instrument, map: {}});  // reset views with empty data
     let data:InstrumentDataMap = {};
     if (instrument.id.ISIN) {
         data = await retrieveDataByIsin(instrument.id.ISIN);
@@ -64,8 +65,9 @@ const retrieveData = async(instrument: FDC3Instrument) => {
     else if (instrument.id.ticker) {
         data = await retrieveDataByTicker(instrument.id.ticker);
     }
-    store.dispatch(setInstrumentDataMap(data));
-    broadcastPlotData(data);
+    const pack: InstrumentPackage = { instrument, map: data};
+    store.dispatch(setInstrumentPackage(pack));
+    broadcastPlotData(pack);
 }
 
 
@@ -100,7 +102,7 @@ const App: React.FC = () => {
         return (<Login onLogin={onLogin}></Login>);
     } else if (instrument) {
         return (
-            <PlotLineElement key={MetricName.SpreadRelTWA} title={getChartTitle(instrument, MetricName.SpreadRelTWA)} metric={MetricName.SpreadRelTWA} ></PlotLineElement>
+            <PlotLineElement key={MetricName.SpreadRelTWA} metric={MetricName.SpreadRelTWA} ></PlotLineElement>
         )
     } else {
         return (<div></div>);

@@ -4,21 +4,19 @@ import { useSelector } from 'react-redux';
 import { fin } from 'openfin-adapter/src/mock';
 
 import * as Highcharts from 'highcharts';
-import { HighChartsFigure, getDefaultChartOptions, getDefaultAreaSeriesOptions, chartDateFormatter } from '../common';
+import { getDefaultChartOptions, getDefaultAreaSeriesOptions, chartDateFormatter, InstrumentFigure, getDefaultChartTitleOptions, getChartTitle } from '../common';
 import { getSelector } from '../store'
 
 
 
 export interface PlotAreaElementProps {
-    title?: string;
     metric: string
     stacking?: string;
 }
 
 export const PlotAreaElement:React.FC<PlotAreaElementProps> = (props: PlotAreaElementProps) => {
     const chartDiv = React.createRef<HTMLDivElement>();
-    const [title, setTitle] = React.useState<string>();
-    const [figure, setFigure] = React.useState<Array<HighChartsFigure>>([]);
+    const [figure, setFigure] = React.useState<InstrumentFigure>();
     const [chart, setChart] = React.useState<Highcharts.Chart>();
     const [series, setSeries] = React.useState<Array<Highcharts.Series>>([]);
     const [bounds, setBounds] = React.useState<OpenFin.Bounds>();
@@ -26,7 +24,7 @@ export const PlotAreaElement:React.FC<PlotAreaElementProps> = (props: PlotAreaEl
 
     React.useEffect(() => {
         log.debug('store changed', storeFigure);
-        setFigure(storeFigure.data);
+        setFigure(storeFigure);
     }, [storeFigure])
 
     React.useEffect(() => {
@@ -48,11 +46,6 @@ export const PlotAreaElement:React.FC<PlotAreaElementProps> = (props: PlotAreaEl
         });        
 
     }, []);
-    React.useEffect(() => {
-        log.debug('setting figure');
-        setTitle(props.title);
-    }, []);
-
 
     React.useEffect(() => {
         const configChart = async() => {
@@ -70,8 +63,6 @@ export const PlotAreaElement:React.FC<PlotAreaElementProps> = (props: PlotAreaEl
                         options.tooltip.split = true;
                     }
                     //@ts-ignore
-                    options.title.text = title;
-                    //@ts-ignore
                     options.xAxis.labels.formatter = chartDateFormatter;
                     const cc = Highcharts.chart(chartDiv.current, options);
                     setChart(cc);
@@ -88,18 +79,23 @@ export const PlotAreaElement:React.FC<PlotAreaElementProps> = (props: PlotAreaEl
 
 
     const updateFigure = React.useCallback(() => {
-        if (chartDiv.current && figure && figure.length > 0 && chart) {
+        if (chartDiv.current && figure && figure.data && chart) {
             if (series.length > 0) {
                 series.forEach(s => s.remove(false));
             }
             const areaCharts: Array<Highcharts.Series> = [];
-            figure.forEach( plot => {
+            figure.data.forEach( plot => {
                 const areaSeries = chart.addSeries({ ...getDefaultAreaSeriesOptions(), name: plot.symbol, data: plot.data });
                 areaCharts.push(areaSeries);
             });
             setSeries(areaCharts);
         } else {
             log.debug('figure ready but no chart');
+        }
+        if (chart && figure) {
+            const charTitle = getDefaultChartTitleOptions();
+            charTitle.text = getChartTitle(figure.instrument, figure.metric);
+            chart.setTitle(charTitle)
         }
     }, [chartDiv.current, figure, chart]);
 

@@ -20,7 +20,7 @@ export enum MetricName {
     Custom = 'Custom'  // not bmll
 }
 
-import { HighChartsDataPoint, HighChartsFigure,InstrumentFigure }  from './common';
+import { FDC3Instrument, HighChartsDataPoint, HighChartsFigure,InstrumentFigure }  from './common';
 
 export type HighChartsDataMap = Record<string, HighChartsFigure>;  // MIC => TradingViewFigure
 export type InstrumentDataMap = Record<string, HighChartsDataMap>; // Metric => TradomgViewDataMap
@@ -216,12 +216,12 @@ export const transformJoinedData = (listing: Array<JoinedListingMetric>, metricL
     return map;
 }
 
-export const getInstrumentFigure = (map: InstrumentDataMap, metric: MetricName):InstrumentFigure => {
+export const getInstrumentFigure = (map: InstrumentDataMap, metric: MetricName, instrument: FDC3Instrument):InstrumentFigure => {
     const tvMap = map[metric];
     if (tvMap) {
-        return { metric, data: Array.from(Object.values(tvMap)) };
+        return { metric, data: Array.from(Object.values(tvMap)), instrument };
     } else {
-        return { metric, data: [] } ;
+        return { metric, data: [], instrument } ;
     }
 }
 

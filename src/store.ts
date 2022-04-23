@@ -2,12 +2,11 @@ import { configureStore, createSlice } from '@reduxjs/toolkit';
 import log from 'loglevel';
 
 import { getInstrumentFigure, InstrumentDataMap, MetricName } from './datastore'
-import { InstrumentFigure, FDC3Instrument } from './common'
+import { InstrumentFigure, FDC3Instrument, InstrumentPackage } from './common'
 
 interface InstrumentDataState {
-    isin: string;
     instrument: FDC3Instrument;
-    map: InstrumentDataMap;
+    package: InstrumentPackage;
 }
 
 export interface InstrumentDataRootState {
@@ -17,40 +16,33 @@ export interface InstrumentDataRootState {
 export const plotStateSlice = createSlice({
     name: 'plotData',
     initialState: {
-        isin: '',
         instrument: undefined,
-        map: {},
+        package: { map: {}, instrument: undefined },
     },
     reducers: {
-        setISIN: (state, action) => {
-            log.debug(`store setISIN ${action.payload}`);
-            state.isin = action.payload;
-            state.map = {};
-        },
         setInstrument: (state, action) => {
             log.debug(`store setInstrument ${action.payload}`);
             state.instrument = action.payload;
-            state.map = {};
+            state.package = { map: {}, instrument: action.payload };
         },
-        setInstrumentDataMap: (state, action) => {
-            state.map = action.payload;
+        setInstrumentPackage: (state, action) => {
+            state.package = action.payload;
         },
     }
 });
 
-export const { setISIN, setInstrument, setInstrumentDataMap } = plotStateSlice.actions;
-
-export const selectISIN = (state: InstrumentDataRootState): string => state.plotData.isin;
+export const { setInstrument, setInstrumentPackage } = plotStateSlice.actions;
 
 export const selectInstrument = (state: InstrumentDataRootState): FDC3Instrument => state.plotData.instrument;
 
-export const selectFillProbability = (state: InstrumentDataRootState): InstrumentFigure => {
-    return getInstrumentFigure(state.plotData.map, MetricName.FillProbability);
+const selectFillProbability = (state: InstrumentDataRootState): InstrumentFigure => {
+    return getInstrumentFigure(state.plotData.package.map, MetricName.FillProbability, state.plotData.package.instrument);
 }
 
-export const selectSpreadRelTWA = (state: InstrumentDataRootState): InstrumentFigure => {
-    return getInstrumentFigure(state.plotData.map, MetricName.SpreadRelTWA);
+const selectSpreadRelTWA = (state: InstrumentDataRootState): InstrumentFigure => {
+    return getInstrumentFigure(state.plotData.package.map, MetricName.SpreadRelTWA, state.plotData.package.instrument);
 }
+
 
 export const getSelector = (metric:string) => {
     switch (metric) {

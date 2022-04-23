@@ -8,7 +8,7 @@ import { PlotAreaElement } from './PlotAreaElement'
 import log from 'loglevel';
 import { fin } from 'openfin-adapter/src/mock';
 
-import store, { setInstrumentDataMap } from '../store';
+import store, { setInstrumentPackage } from '../store';
 import { ChartViewOptions, getBroadcastChannel, connectChannel, getChartTitle } from '../common';
 
 import '../index.css';
@@ -16,7 +16,7 @@ import '../index.css';
 window.addEventListener("DOMContentLoaded",  async () => {
     getBroadcastChannel().onmessage = (event) => {
         log.debug('broadcastChannel.onmessag', event);
-        store.dispatch(setInstrumentDataMap(event.data));
+        store.dispatch(setInstrumentPackage(event.data));
     }
 
     const rootElement = document.getElementById('root');
@@ -49,12 +49,12 @@ const App: React.FC = () => {
     if (chartOptions && chartOptions.instrument) {
         if (chartOptions.chartType === 'line') {
             return (
-                <PlotLineElement key={chartOptions.metric} title={getChartTitle(chartOptions.instrument, chartOptions.metric)} metric={chartOptions.metric}></PlotLineElement>
+                <PlotLineElement key={chartOptions.metric} metric={chartOptions.metric}></PlotLineElement>
             )
         }
         else if (chartOptions.chartType === 'area') {
             return (
-                <PlotAreaElement key={chartOptions.metric} title={getChartTitle(chartOptions.instrument, chartOptions.metric)} metric={chartOptions.metric} stacking={chartOptions.stacking} ></PlotAreaElement>
+                <PlotAreaElement key={chartOptions.metric} metric={chartOptions.metric} stacking={chartOptions.stacking} ></PlotAreaElement>
             )
         } else {
             return (<div></div>);

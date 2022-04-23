@@ -45,6 +45,9 @@ const testSecurities: FDC3Instrument[] = [
     { type: FDC3.ContextType, name: "RDSA", id: {ticker:"RDSA" }},
     { type: FDC3.ContextType, name: "REL", id: {ticker:"REL" }},
     { type: FDC3.ContextType, name: "ULVR", id: {ticker:"ULVR" }},
+    { type: FDC3.ContextType, name: "AAPL", id: {ticker:"AAPL" }},
+    { type: FDC3.ContextType, name: "GOOG", id: {ticker:"GOOG" }},
+    { type: FDC3.ContextType, name: "TSLA", id: {ticker:"TSLA" }},
 ]
 
 const launchPartnerApp = async() => {

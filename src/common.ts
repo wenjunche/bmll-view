@@ -57,16 +57,19 @@ export interface HighChartsFigure {
 
 export interface InstrumentFigure {
     metric: string;
+    instrument: FDC3Instrument;
     data: Array<HighChartsFigure>;
 }
 
+const defaultChartTitleOptions:Highcharts.TitleOptions = {
+    text: 'Hightcharts line',
+    style: { color: ChartStyle.TextColor,
+             fontSize: '11px'
+    }
+}
+
 const defaultChartOptions:Highcharts.Options = {
-    title: {
-        text: 'Hightcharts line',
-        style: { color: ChartStyle.TextColor,
-                 fontSize: '11px'
-        }
-    },
+    title: defaultChartTitleOptions,
     yAxis: {
         title: {
             text: ' ',
@@ -103,6 +106,11 @@ const defaultChartOptions:Highcharts.Options = {
 export const getDefaultChartOptions = ():Highcharts.Options => {
     // deep-clone here so some attributes can be updated/added
     return JSON.parse(JSON.stringify(defaultChartOptions));    
+}
+
+export const getDefaultChartTitleOptions = ():Highcharts.TitleOptions => {
+    // deep-clone here so some attributes can be updated/added
+    return JSON.parse(JSON.stringify(defaultChartTitleOptions));    
 }
 
 const defaultLineSeriesOptions:Highcharts.SeriesLineOptions = {
@@ -172,8 +180,17 @@ export interface FDC3Instrument  {
     }
 }
 
+export interface InstrumentPackage {
+    instrument: FDC3Instrument;
+    map: InstrumentDataMap;
+}
+
 export const getChartTitle = (instrument: FDC3Instrument, metric: string): string => {
-    return `${instrument.id.ticker}/${metric}`;
+    if (instrument) {
+        return `${instrument.id.ticker}/${metric}`;
+    } else {
+        return metric;
+    }
 }
 
 
@@ -236,7 +253,7 @@ export const getBroadcastChannel = ():BroadcastChannel => {
     return plotDataBroadcastChannel;
 }
 
-export const broadcastPlotData = (data: InstrumentDataMap) => {
+export const broadcastPlotData = (data: InstrumentPackage) => {
     log.debug('broadcastPlotData', data);
     getBroadcastChannel().postMessage(data);
 }
