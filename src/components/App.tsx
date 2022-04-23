@@ -9,7 +9,7 @@ import log from 'loglevel';
 
 import { fin } from 'openfin-adapter/src/mock';
 
-import { broadcastPlotData, FDC3Instrument, launchView, listenChannelConnection } from '../common';
+import { broadcastPlotData, FDC3Instrument, launchView, listenChannelConnection, getChartTitle } from '../common';
 import { MetricName, retrieveDataByIsin, InstrumentDataMap, retrieveDataByTicker } from '../datastore';
 
 import store, { setInstrumentDataMap, selectISIN, selectInstrument } from '../store';
@@ -44,11 +44,11 @@ const initViews = async(instrument: FDC3Instrument) => {
                 retrieveData(instrument);
             }
         });
-        await launchView({ metric: MetricName.FillProbability, chartType: 'line' } );
-        await launchView({ metric: MetricName.TWALiquidityAroundBBO, chartType: 'line' } );
-        await launchView({ metric: MetricName.TimeAtEBBO, chartType: 'line'} );
-        await launchView({ metric: MetricName.TradeNotional, chartType: 'area'} );
-        await launchView({ metric: MetricName.TradeNotional, chartType: 'area', stacking: 'percent'} );
+        await launchView({ metric: MetricName.FillProbability, chartType: 'line', instrument } );
+        await launchView({ metric: MetricName.TWALiquidityAroundBBO, chartType: 'line', instrument } );
+        await launchView({ metric: MetricName.TimeAtEBBO, chartType: 'line', instrument} );
+        await launchView({ metric: MetricName.TradeNotional, chartType: 'area', instrument} );
+        await launchView({ metric: MetricName.TradeNotional, chartType: 'area', stacking: 'percent', instrument} );
 
     }
     if (channeClientConnected === 5) {
@@ -98,10 +98,12 @@ const App: React.FC = () => {
 
     if (!isAuth) {
         return (<Login onLogin={onLogin}></Login>);
-    } else {
+    } else if (instrument) {
         return (
-            <PlotLineElement key={MetricName.SpreadRelTWA} title={MetricName.SpreadRelTWA} metric={MetricName.SpreadRelTWA} ></PlotLineElement>
+            <PlotLineElement key={MetricName.SpreadRelTWA} title={getChartTitle(instrument, MetricName.SpreadRelTWA)} metric={MetricName.SpreadRelTWA} ></PlotLineElement>
         )
+    } else {
+        return (<div></div>);
     }
 }
 

@@ -9,7 +9,7 @@ import log from 'loglevel';
 import { fin } from 'openfin-adapter/src/mock';
 
 import store, { setInstrumentDataMap } from '../store';
-import { ChartViewOptions, getBroadcastChannel, connectChannel } from '../common';
+import { ChartViewOptions, getBroadcastChannel, connectChannel, getChartTitle } from '../common';
 
 import '../index.css';
 
@@ -38,23 +38,23 @@ const App: React.FC = () => {
     const [chartOptions, setChartOptions] = React.useState<ChartViewOptions>();
 
     React.useEffect(() => {
-            const retrieveData = async() => {
+            const retrieveOptions = async() => {
                 // @ts-ignore
                 const opt = await fin.me.getOptions();
                 setChartOptions(opt.customData);
             }
-            retrieveData();
+            retrieveOptions();
     }, []);
 
-    if (chartOptions) {
+    if (chartOptions && chartOptions.instrument) {
         if (chartOptions.chartType === 'line') {
             return (
-                <PlotLineElement key={chartOptions.metric} title={chartOptions.metric} metric={chartOptions.metric}></PlotLineElement>
+                <PlotLineElement key={chartOptions.metric} title={getChartTitle(chartOptions.instrument, chartOptions.metric)} metric={chartOptions.metric}></PlotLineElement>
             )
         }
         else if (chartOptions.chartType === 'area') {
             return (
-                <PlotAreaElement key={chartOptions.metric} title={chartOptions.metric} metric={chartOptions.metric} stacking={chartOptions.stacking} ></PlotAreaElement>
+                <PlotAreaElement key={chartOptions.metric} title={getChartTitle(chartOptions.instrument, chartOptions.metric)} metric={chartOptions.metric} stacking={chartOptions.stacking} ></PlotAreaElement>
             )
         } else {
             return (<div></div>);

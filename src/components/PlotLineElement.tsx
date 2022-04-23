@@ -62,7 +62,7 @@ export const PlotLineElement:React.FC<PlotLineElementProps> = (props: PlotLineEl
                         width: bounds.width
                     }
                     //@ts-ignore
-                    options.yAxis.title.text = title;
+                    options.title.text = title;
                     //@ts-ignore
                     options.xAxis.labels.formatter = chartDateFormatter;
                     const cc = Highcharts.chart(chartDiv.current, options);

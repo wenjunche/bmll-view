@@ -62,11 +62,14 @@ export interface InstrumentFigure {
 
 const defaultChartOptions:Highcharts.Options = {
     title: {
-        text: 'Hightcharts line'
+        text: 'Hightcharts line',
+        style: { color: ChartStyle.TextColor,
+                 fontSize: '11px'
+        }
     },
     yAxis: {
         title: {
-            text: 'yAxis Title',
+            text: ' ',
             style: { color: ChartStyle.TextColor }
         }
     },
@@ -124,6 +127,7 @@ export const getDefaultAreaSeriesOptions = ():Highcharts.SeriesLineOptions => {
 
 export interface ChartViewOptions {
     url?: string;
+    instrument?: FDC3Instrument;
     metric: MetricName;
     chartType?: 'line' | 'area';
     stacking?: string;
@@ -131,11 +135,11 @@ export interface ChartViewOptions {
 }
 
 export const launchView = async (options: ChartViewOptions ) => {
-    let { metric, chartType, targetIdentity, stacking } = options;
+    let { metric, chartType, targetIdentity, stacking, instrument } = options;
     const platform: WorkspacePlatformModule = getCurrentSync();
     const viewOptions = { url: options.url || `${APP_ROOT_URL}/plotview.html`,
                           isClosable: false,
-                          customData: { metric, chartType, stacking },
+                          customData: { metric, chartType, stacking, instrument },
                           interop: {
                             currentContextGroup: 'green'
                           }
@@ -166,6 +170,10 @@ export interface FDC3Instrument  {
         ticker: string;
         ISIN?: string;
     }
+}
+
+export const getChartTitle = (instrument: FDC3Instrument, metric: string): string => {
+    return `${instrument.id.ticker}/${metric}`;
 }
 
 
