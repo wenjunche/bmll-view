@@ -71,7 +71,7 @@ const launchPlotWindow = async () => {
 class PlatformInteropBroker extends InteropBroker {
     async handleFiredIntent(intent: OpenFin.Intent) {
         console.log("Received request for a raised intent: ", intent);
-        if (intent.name === FDC3.IntentName && intent.context.type === FDC3.ContextType) {
+        if (intent.name === FDC3.IntentName && (intent.context.type === FDC3.ContextType || intent.context.type === FDC3.LegacyContextType)) {
             await launchPlotWindow();
             const targetIdentity = { uuid: fin.me.uuid, name: plotViewName };
             log.debug(`setIntentTarget`, targetIdentity);
@@ -82,7 +82,7 @@ class PlatformInteropBroker extends InteropBroker {
     async setContext({ context }: { context: OpenFin.Context;
     }, clientIdentity: OpenFin.ClientIdentity) {
         console.log("Setting context: ", context);
-        if (context.type === FDC3.LegacyContextType) {
+        if (context.type === FDC3.ContextType || context.type === FDC3.LegacyContextType) {
             await launchPlotWindow();
         }
         super.setContext({ context }, clientIdentity);

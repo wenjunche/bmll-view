@@ -3,8 +3,7 @@ import ReactDOM from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import styled from 'styled-components';
 import { fin } from 'openfin-adapter/src/mock';
-import { FDC3 } from '../common';
-import { launchView, FDC3Instrument } from '../common';
+import { launchView, FDC3, FDC3Instrument } from '../common';
 import { MetricName } from '../datastore';
 
 import '../index.css';
@@ -48,6 +47,7 @@ const testSecurities: FDC3Instrument[] = [
     { type: FDC3.ContextType, name: "AAPL", id: {ticker:"AAPL" }},
     { type: FDC3.ContextType, name: "GOOG", id: {ticker:"GOOG" }},
     { type: FDC3.ContextType, name: "TSLA", id: {ticker:"TSLA" }},
+    { type: FDC3.LegacyContextType, name: "JPM", id: {ticker:"JPM" }}, // example for using legacy context type
 ]
 
 const launchPartnerApp = async() => {

@@ -167,12 +167,12 @@ export const launchView = async (options: ChartViewOptions ) => {
 export enum FDC3  {
     IntentName = 'ShowInstrument',
     ContextType = 'fdc3.instrument',
-//    LegacyContextType = 'instrument',
-    LegacyContextType = 'fdc3.instrument',
+    LegacyContextType = 'instrument',
 }
 
+type InstrumentType = FDC3.ContextType | FDC3.LegacyContextType;
 export interface FDC3Instrument  {
-    type: FDC3.ContextType;
+    type: InstrumentType;
     name: string;
     id: {
         ticker: string;
