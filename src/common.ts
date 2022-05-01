@@ -177,7 +177,8 @@ export interface FDC3Instrument  {
     id: {
         ticker: string;
         ISIN?: string;
-    }
+    },
+    mic?: string;  // not a part of FDC3 standard,  needed for POC
 }
 
 export interface InstrumentPackage {

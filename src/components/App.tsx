@@ -63,7 +63,7 @@ const retrieveData = async(instrument: FDC3Instrument) => {
         data = await retrieveDataByIsin(instrument.id.ISIN);
     }
     else if (instrument.id.ticker) {
-        data = await retrieveDataByTicker(instrument.id.ticker);
+        data = await retrieveDataByTicker(instrument);
     }
     const pack: InstrumentPackage = { instrument, map: data};
     store.dispatch(setInstrumentPackage(pack));

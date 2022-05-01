@@ -295,11 +295,13 @@ export const retrieveDataByIsin = async(isin: string):Promise<InstrumentDataMap>
     return data;
 }
 
-export const retrieveDataByTicker = async(ticker: string):Promise<InstrumentDataMap> => {
-    log.debug(`retrieveDataByTicker ${ticker}`);
+export const retrieveDataByTicker = async(instrument: FDC3Instrument):Promise<InstrumentDataMap> => {
+    log.debug('retrieveDataByTicker', instrument);
     await initApiClient();
 
-    const tickerListing = await loadSecurityByInstrumentNoFilter({Ticker: ticker, IsPrimary: 'True', IsAlive: 'True'}, true);
+    const tickerListing = await loadSecurityByInstrumentNoFilter(
+                                Object.assign({Ticker: instrument.id.ticker, IsPrimary: 'True', IsAlive: 'True'}, 
+                                    instrument.mic?{MIC: instrument.mic}:{}), true);
     console.log('tickerListing', tickerListing);
     if (tickerListing.length > 0) {
         // hard-code tickerListing[0]
