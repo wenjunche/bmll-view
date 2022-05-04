@@ -27,6 +27,7 @@
     "homepage": "https://github.com/openfin/bmll-view#readme",
     "dependencies": {
         "@bmll/dd-api": "c:\\Users\\wenju\\Documents\\projects\\bmll-viz-labs\\dd-api\\dist",
+        "@faker-js/faker": "^6.3.1",
         "@openfin/workspace": "^6.2.4",
         "@openfin/workspace-platform": "^6.2.4",
         "@reduxjs/toolkit": "^1.8.1",

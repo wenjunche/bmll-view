@@ -11,6 +11,8 @@ import {
 import { getToken } from './auth';
 import log from 'loglevel';
 
+import { faker } from '@faker-js/faker';
+
 export enum MetricName {
     FillProbability = 'FillProbability|1',
     TWALiquidityAroundBBO = 'TWALiquidityAroundBBO|10bpsNotional',
@@ -263,6 +265,10 @@ const dataTransform = (dataInFigure: Array<ListingMetric>): Array<HighChartsData
      return newData;
 };
 
+const dateFormatter = (date: Date) => {
+    return date.getFullYear()  + "-" + ('0' + (date.getMonth()+1)).slice(-2) + "-" + ('0' + date.getDate()).slice(-2)    
+}
+
 const getDateRange = () => {
     const start = new Date();
     const end   = new Date();
@@ -327,4 +333,28 @@ export const retrieveDataByTicker = async(instrument: FDC3Instrument):Promise<In
         console.warn('no tickerListing');
         return {};
     }
+}
+
+export const generateFakeTrades = (securities: any[]) => {
+    const dateRange = getDateRange();
+    const accounts = [
+        faker.datatype.hexadecimal(10).slice(2).toUpperCase(),
+        faker.datatype.hexadecimal(10).slice(2).toUpperCase(),
+        faker.datatype.hexadecimal(10).slice(2).toUpperCase(),
+        faker.datatype.hexadecimal(10).slice(2).toUpperCase(),
+        faker.datatype.hexadecimal(10).slice(2).toUpperCase(),
+    ];
+
+    return securities.map(sec => {
+        return Object.assign({}, sec, {
+            User: faker.internet.email(),
+            Date: dateFormatter(faker.date.between(dateRange[0], dateRange[1])),
+            CCY: sec.Currency,
+            Side: faker.helpers.arrayElement(['Buy', 'Sell']),
+            Quantity: faker.datatype.number({ min: 50, max: 500 }),
+            Price: faker.finance.amount(),
+            Account: accounts[faker.datatype.number({ min: 0, max: accounts.length - 1 })],
+            OrderID: faker.datatype.hexadecimal(10).slice(2).toUpperCase() //,faker.datatype.uuid()
+        });
+    })
 }
