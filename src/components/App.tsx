@@ -9,7 +9,7 @@ import log from 'loglevel';
 
 import { fin } from 'openfin-adapter/src/mock';
 
-import { broadcastPlotData, FDC3Instrument, launchView, listenChannelConnection, getChartTitle, InstrumentPackage } from '../common';
+import { broadcastPlotData, FDC3Instrument, launchView, listenChannelConnection, getChartTitle, InstrumentPackage, FDC3 } from '../common';
 import { MetricName, retrieveDataByIsin, InstrumentDataMap, retrieveDataByTicker } from '../datastore';
 
 import store, { setInstrumentPackage, selectInstrument } from '../store';
@@ -59,7 +59,7 @@ const initViews = async(instrument: FDC3Instrument) => {
 const retrieveData = async(instrument: FDC3Instrument) => {
     broadcastPlotData({ instrument, map: {}});  // reset views with empty data
     let data:InstrumentDataMap = {};
-    if (instrument.id.ISIN) {
+    if (instrument.id.ISIN && instrument.id.MIC === FDC3.XLON) {
         data = await retrieveDataByIsin(instrument.id.ISIN);
     }
     else if (instrument.id.ticker) {

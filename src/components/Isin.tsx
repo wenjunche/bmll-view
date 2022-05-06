@@ -82,9 +82,9 @@ export const IsinDropdown: React.FC = () => {
             name: params.data.Name,
             id: {
                 ticker: params.data.Ticker,
-//                ISIN: params.data.ISIN
-            },
-            mic: params.data.OPOL
+                ISIN: params.data.ISIN,
+                MIC: params.data.OPOL
+            }
         }
         // @ts-ignore
         fdc3.broadcast(context);        

@@ -307,7 +307,7 @@ export const retrieveDataByTicker = async(instrument: FDC3Instrument):Promise<In
 
     const tickerListing = await loadSecurityByInstrumentNoFilter(
                                 Object.assign({Ticker: instrument.id.ticker, IsPrimary: 'True', IsAlive: 'True'}, 
-                                    instrument.mic?{MIC: instrument.mic}:{}), true);
+                                    instrument.id.MIC?{MIC: instrument.id.MIC}:{}), true);
     console.log('tickerListing', tickerListing);
     if (tickerListing.length > 0) {
         // hard-code tickerListing[0]

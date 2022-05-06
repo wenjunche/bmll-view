@@ -168,6 +168,7 @@ export enum FDC3  {
     IntentName = 'ShowInstrument',
     ContextType = 'fdc3.instrument',
     LegacyContextType = 'instrument',
+    XLON = 'XLON'
 }
 
 type InstrumentType = FDC3.ContextType | FDC3.LegacyContextType;
@@ -177,8 +178,8 @@ export interface FDC3Instrument  {
     id: {
         ticker: string;
         ISIN?: string;
-    },
-    mic?: string;  // not a part of FDC3 standard,  needed for POC
+        MIC?: string;  // not a part of FDC3 standard,  needed for POC
+    }
 }
 
 export interface InstrumentPackage {
