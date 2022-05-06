@@ -64,7 +64,10 @@ let plotWindowCreated = false;
 const launchPlotWindow = async () => {
     if (!plotWindowCreated) {
         plotWindowCreated = true;
-        await createBrowserWindow({ title: 'Instrument Plot', layout: plotPageLayout });
+        const wmodule = await createBrowserWindow({ title: 'Instrument Plot', layout: plotPageLayout });
+        wmodule.openfinWindow.once('closed', () => {
+            plotWindowCreated = false;
+        });
     }
 }
 
