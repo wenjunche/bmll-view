@@ -32,7 +32,6 @@ export async function login(username: string, password: string, onLogin?: (user:
     if (!user.challengeName && onLogin) {
         onLogin(user);
     }
-    log.info({ message: 'User login ' + (user ? 'success' : 'fail') }, await getToken());
     return user;
 }
 

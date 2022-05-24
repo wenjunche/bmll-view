@@ -42,7 +42,6 @@ const selectPageLayout: PageLayout = {
 window.addEventListener('DOMContentLoaded', async () => {
   let platform = fin.Platform.getCurrentSync();
   platform.once('platform-api-ready', () => {
-    console.log('platform-api-ready');
     createBrowserWindow({ title: 'Instrument Selection', layout: selectPageLayout });
   });
   await initialisePlatform();

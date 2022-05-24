@@ -76,7 +76,6 @@ export const IsinDropdown: React.FC = () => {
     const [rowData] = useState(testTrades);
 
     const onCellClicked = (params: CellClickedEvent) => {
-        console.log('Cell was clicked', params);
         const context: FDC3Instrument = {
             type: FDC3.ContextType,
             name: params.data.Name,
@@ -88,7 +87,6 @@ export const IsinDropdown: React.FC = () => {
         }
         // @ts-ignore
         fdc3.broadcast(context);        
-        console.log(`fdc3.broadcast(${JSON.stringify(context)})`);
     }
 
     const onGridReady = (event: GridReadyEvent) => {
@@ -105,7 +103,6 @@ export const IsinDropdown: React.FC = () => {
 
     const onClickHandler = () => {
         if (isinSelectRef?.current) {
-            console.log(isinSelectRef.current.value);
             const context = testSecurities.filter(v => v.id.ticker === isinSelectRef.current?.value)[0]
             // @ts-ignore
             // fdc3.raiseIntent(FDC3.IntentName, context);

@@ -30,7 +30,6 @@ window.addEventListener("DOMContentLoaded",  async () => {
 });
 
 const intentHandler = (ctx) => {
-    console.log("Intent Received: ", ctx);
     if (ctx.type === FDC3.ContextType || ctx.type === FDC3.LegacyContextType) {
         // { type: FDC3.ContextType, id: { ticker: isinSelectRef.current.value} };
         store.dispatch(setInstrument(ctx));
@@ -38,14 +37,12 @@ const intentHandler = (ctx) => {
 };
 
 const contextHandler = (ctx) => {
-    console.log("Context Received: ", ctx);
     if (ctx.type === FDC3.ContextType || ctx.type === FDC3.LegacyContextType) {
         store.dispatch(setInstrument(ctx));
     }
 };
 
 const initIntentHandler = async() => {
-    log.debug(`init intent handler for ${FDC3.IntentName}`);
     // @ts-ignore
     window.fdc3.addIntentListener(FDC3.IntentName, intentHandler);
     // @ts-ignore

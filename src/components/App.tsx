@@ -14,7 +14,7 @@ import { MetricName, retrieveDataByIsin, InstrumentDataMap, retrieveDataByTicker
 
 import store, { setInstrumentPackage, selectInstrument } from '../store';
 
-log.setLevel('debug');
+log.setLevel('warn');
 
 const cognito: ICognitoUserPoolData = {
     UserPoolId: "us-east-1_tMDWlFQl2",

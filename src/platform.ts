@@ -77,7 +77,6 @@ class PlatformInteropBroker extends InteropBroker {
         if (intent.name === FDC3.IntentName && (intent.context.type === FDC3.ContextType || intent.context.type === FDC3.LegacyContextType)) {
             await launchPlotWindow();
             const targetIdentity = { uuid: fin.me.uuid, name: plotViewName };
-            log.debug(`setIntentTarget`, targetIdentity);
             super.setIntentTarget(intent, targetIdentity);
             return {source: targetIdentity.uuid}
         }

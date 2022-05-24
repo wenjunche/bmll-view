@@ -45,7 +45,6 @@ export const initApiClient = async(environment = 'prod') => {
 
 export const loadSecurityBySymbol = async(symbol: string, isPrimary = false): Promise<Listing[]> => {
     const [ticker, mic] = symbol.split(':');
-    log.info('loadSecurityByTickerOrMic | symbol=' + symbol);
     const query = { MIC: [mic], Ticker: [ticker] };
     const objectType = isPrimary ? 'Listing' : 'Instrument';
     const listings = await apiclient.reference.query<Listing>({ ...query, objectType }, false);
@@ -88,13 +87,6 @@ export const getSecurityMetrics = async (
         return { metric, suffix };
     });
     const metrics = { $or: metricQuery } as Record<string, any>;    
-    log.info({
-        message: 'getSecurityMetrics',
-        objectId: listingIds,
-        startDate,
-        endDate,
-        metric: metrics,
-    });
 
     const series = await apiclient.timeseries.query({
         objectId: listingIds,
@@ -154,7 +146,6 @@ const filterMetricMetadata = (m: MetricMetadata, f: MetricFilter): boolean => {
 
 export const getAvailableMetrics = async(filter: Array<MetricFilter>) => {
     const all = await apiclient.timeseries.getAvailableMetrics();
-    console.log('allmetrics', all)
     return all.filter(m => {
         return filter.some(f => filterMetricMetadata(m, f));
     });
@@ -171,13 +162,6 @@ export const getTimeSeries = async (
         return { metric: name, suffix };
     });
     const listingIds: number[] =  listing.map(l => l.ListingId);
-    log.info({
-        message: 'getTimeSeries',
-        objectId: listingIds,
-        startDate,
-        endDate,
-        metric: metricNames
-    });
 
     return apiclient.timeseries.query({
         objectId: listingIds,
@@ -261,7 +245,6 @@ const dataTransform = (dataInFigure: Array<ListingMetric>): Array<HighChartsData
     const newData = dataInFigure.map(item => { 
         return [ Date.parse(item.Date), item['Value']] as HighChartsDataPoint;
      });
-     log.debug('TV data', newData);
      return newData;
 };
 
@@ -278,11 +261,9 @@ const getDateRange = () => {
 }
 
 export const retrieveDataByIsin = async(isin: string):Promise<InstrumentDataMap> => {
-    log.debug(`retrieveDataByIsin ${isin}`);
     await initApiClient();
 //    const query = { ISIN: [instrument.ISIN], OPOL: [instrument.OPOL] };
     const pyListing = await loadSecurityByInstrument({ISIN: [isin], OPOL: ['XLON']}, false);
-    console.log('pyListing', pyListing);
     const metrics = await getAvailableMetrics([
             { field: 'TWALiquidityAroundBBO', frequency: 'D', suffix: ['Ask10bpsNotional', 'Bid10bpsNotional'] },
             { field: 'FillProbability',  frequency: 'D', level: 1 },
@@ -291,24 +272,18 @@ export const retrieveDataByIsin = async(isin: string):Promise<InstrumentDataMap>
             { field: 'TradeNotional', frequency: 'D'}
         ]
         );
-    console.log('metrics', metrics);
     const pySeries = await getTimeSeries(pyListing, metrics, getDateRange());
-    log.debug('pySeries', pySeries);
     const joined = dataJoin(pyListing, pySeries);
-    log.debug('joined', joined);
     const data = transformJoinedData(joined, metrics.map(m => m.field));
-    log.debug('transformed', data);
     return data;
 }
 
 export const retrieveDataByTicker = async(instrument: FDC3Instrument):Promise<InstrumentDataMap> => {
-    log.debug('retrieveDataByTicker', instrument);
     await initApiClient();
 
     const tickerListing = await loadSecurityByInstrumentNoFilter(
                                 Object.assign({Ticker: instrument.id.ticker, IsPrimary: 'True', IsAlive: 'True'}, 
                                     instrument.id.MIC?{MIC: instrument.id.MIC}:{}), true);
-    console.log('tickerListing', tickerListing);
     if (tickerListing.length > 0) {
         // hard-code tickerListing[0]
         const pyListing = await loadSecurityByInstrumentNoFilter({objectIds: [tickerListing[0].InstrumentId], objectType: 'Instrument'}, false);
@@ -321,13 +296,9 @@ export const retrieveDataByTicker = async(instrument: FDC3Instrument):Promise<In
                 { field: 'TradeNotional', frequency: 'D'}
             ]
             );
-        console.log('metrics', metrics);
         const pySeries = await getTimeSeries(pyListing, metrics, getDateRange());
-        log.debug('pySeries', pySeries);
         const joined = dataJoin(pyListing, pySeries);
-        log.debug('joined', joined);
         const data = transformJoinedData(joined, metrics.map(m => m.field));
-        log.debug('transformed', data);
         return data;
     } else {
         console.warn('no tickerListing');

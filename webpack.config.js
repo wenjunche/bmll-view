@@ -34,14 +34,14 @@ const copyPlugin = new CopyPlugin({
 });
 
 module.exports = {
-    mode: 'development',
+    mode: 'production',
     entry: {
         index: './src/index.tsx',
         provider: './src/provider.ts',
         isin: './src/components/Isin.tsx',
         plotview: './src/components/PlotView.tsx',
     },
-    devtool: 'inline-source-map',
+    devtool: 'source-map',
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: '[name]-bundle.js'
