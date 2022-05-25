@@ -33,15 +33,18 @@ const copyPlugin = new CopyPlugin({
     ],
 });
 
-module.exports = {
-    mode: 'production',
+module.exports = (env) => {
+    console.log(env.mode);
+
+   return {
+    mode: env.mode,
     entry: {
         index: './src/index.tsx',
         provider: './src/provider.ts',
         isin: './src/components/Isin.tsx',
         plotview: './src/components/PlotView.tsx',
     },
-    devtool: 'source-map',
+    devtool: env.mode === 'development' ? 'source-map' : undefined,
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: '[name]-bundle.js'
@@ -104,4 +107,5 @@ module.exports = {
             return middlewares;
         }
     }
+ }
 };

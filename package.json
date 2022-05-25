@@ -6,10 +6,10 @@
     "types": "./types/index.d.ts",
     "scripts": {
         "clean": "rimraf ./dist",
-        "build": "npm run clean && tsc && webpack",
+        "build": "npm run clean && tsc && npx webpack --env mode=production",
         "deploy:npm": "cd dist && npm publish",
         "deploy": "npm run deploy:npm",
-        "start": "webpack-dev-server --mode=development"
+        "start": "webpack-dev-server --env mode=development"
     },
     "repository": {
         "type": "git",
