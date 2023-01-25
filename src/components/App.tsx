@@ -7,8 +7,6 @@ import { useSelector } from 'react-redux';
 import { ICognitoUserPoolData } from 'amazon-cognito-identity-js';
 import log from 'loglevel';
 
-import { fin } from 'openfin-adapter/src/mock';
-
 import { broadcastPlotData, FDC3Instrument, launchView, listenChannelConnection, getChartTitle, InstrumentPackage, FDC3 } from '../common';
 import { MetricName, retrieveDataByIsin, InstrumentDataMap, retrieveDataByTicker } from '../datastore';
 

@@ -1,5 +1,4 @@
 import { init as initialisePlatform } from './platform';
-import { fin } from 'openfin-adapter/src/mock';
 import { PageLayout } from '@openfin/workspace-platform';
 import { appRootUrl, createBrowserWindow, createViewIdentity } from './common';
 
@@ -15,34 +14,36 @@ const selectPageLayout: PageLayout = {
     // @ts-ignore
     preventDragIn: true,
     preventDragOut: true,
-    preventSplitterResize: true,        
-},
+  },
   content: [
-      {
-          type: 'stack',
-          content: [
-              {
-                  type: 'component',
-                  componentName: 'view',
-                  componentState: {
-                      identity: createViewIdentity(fin.me.uuid, 'v1'),
-                      url: `${appRootUrl}/select.html`,
-                      // @ts-ignore
-//                      isClosable: false,
-                      interop: {
-                        currentContextGroup: 'green'
-                      }
-                  }
-              }
-          ]
-      }
-  ]
+    {
+      type: 'stack',
+      content: [
+        {
+          type: 'component',
+          componentName: 'view',
+          componentState: {
+            name: createViewIdentity(fin.me.uuid, 'v1').name,
+            url: `${appRootUrl}/select.html`,
+            // @ts-ignore
+            //                      isClosable: false,
+            interop: {
+              currentContextGroup: 'green',
+            },
+          },
+        },
+      ],
+    },
+  ],
 };
 
 window.addEventListener('DOMContentLoaded', async () => {
   let platform = fin.Platform.getCurrentSync();
   platform.once('platform-api-ready', () => {
-    createBrowserWindow({ title: 'Instrument Selection', layout: selectPageLayout });
+    createBrowserWindow({
+      title: 'Instrument Selection',
+      layout: selectPageLayout,
+    });
   });
   await initialisePlatform();
 });

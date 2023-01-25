@@ -1,7 +1,6 @@
 import log from 'loglevel';
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { fin } from 'openfin-adapter/src/mock';
 
 import * as Highcharts from 'highcharts';
 import { getDefaultChartOptions, getDefaultLineSeriesOptions, chartDateFormatter, InstrumentFigure, getDefaultChartTitleOptions, getChartTitle } from '../common';

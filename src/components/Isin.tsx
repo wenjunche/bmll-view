@@ -8,7 +8,6 @@ import 'ag-grid-community/dist/styles/ag-grid.css';
 //import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham-dark.css';
 
-import { fin } from 'openfin-adapter/src/mock';
 import { FDC3, FDC3Instrument } from '../common';
 import { generateFakeTrades } from '../datastore'
 

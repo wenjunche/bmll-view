@@ -1,4 +1,3 @@
-import { fin } from 'openfin-adapter/src/mock';
 import { CustomThemes } from '@openfin/workspace-platform';
 
 

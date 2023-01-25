@@ -6,6 +6,7 @@ import {
     ListingMetric,
     MetricMetadata,
     dataframeInnerJoin
+    //@ts-ignore
 } from '@bmll/dd-api';
 
 import { getToken } from './auth';

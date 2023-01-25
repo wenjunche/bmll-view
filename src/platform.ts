@@ -1,5 +1,4 @@
 import { init as workspacePlatformInit, BrowserInitConfig } from '@openfin/workspace-platform';
-import { InteropBroker } from "openfin-adapter/src/api/interop";
 import { PageLayout } from '@openfin/workspace-platform';
 import { FDC3, createBrowserWindow, appRootUrl } from './common';
 import log from 'loglevel';
@@ -11,7 +10,28 @@ export async function init() {
         defaultViewOptions: {
             fdc3InteropApi: '1.2',
         },
-        interopOverride: async (InteropBroker, provider, options, ...args) => {
+        interopOverride: async (InteropBroker, provider, options, ...args): Promise<OpenFin.InteropBroker> => {
+            class PlatformInteropBroker extends InteropBroker {
+                async handleFiredIntent(intent: OpenFin.Intent) {
+                    console.log("Received request for a raised intent: ", intent);
+                    if (intent.name === FDC3.IntentName && (intent.context.type === FDC3.ContextType || intent.context.type === FDC3.LegacyContextType)) {
+                        await launchPlotWindow();
+                        const targetIdentity = { uuid: fin.me.uuid, name: plotViewName };
+                        super.setIntentTarget(intent, targetIdentity);
+                        return {source: targetIdentity.uuid}
+                    }
+                }
+                async setContext({ context }: { context: OpenFin.Context;
+                }, clientIdentity: OpenFin.ClientIdentity) {
+                    console.log("Setting context: ", context);
+                    if (context.type === FDC3.ContextType || context.type === FDC3.LegacyContextType) {
+                        await launchPlotWindow();
+                    }
+                    super.setContext({ context }, clientIdentity);
+                }
+            
+            }
+
             return new PlatformInteropBroker(provider, options, ...args);
         }
     };
@@ -35,6 +55,7 @@ const plotPageLayout: PageLayout = {
         // @ts-ignore
         preventDragIn: true,
         preventDragOut: true,
+        //@ts-ignore
         preventSplitterResize: true,        
     },
     content: [
@@ -71,23 +92,3 @@ const launchPlotWindow = async () => {
     }
 }
 
-class PlatformInteropBroker extends InteropBroker {
-    async handleFiredIntent(intent: OpenFin.Intent) {
-        console.log("Received request for a raised intent: ", intent);
-        if (intent.name === FDC3.IntentName && (intent.context.type === FDC3.ContextType || intent.context.type === FDC3.LegacyContextType)) {
-            await launchPlotWindow();
-            const targetIdentity = { uuid: fin.me.uuid, name: plotViewName };
-            super.setIntentTarget(intent, targetIdentity);
-            return {source: targetIdentity.uuid}
-        }
-    }
-    async setContext({ context }: { context: OpenFin.Context;
-    }, clientIdentity: OpenFin.ClientIdentity) {
-        console.log("Setting context: ", context);
-        if (context.type === FDC3.ContextType || context.type === FDC3.LegacyContextType) {
-            await launchPlotWindow();
-        }
-        super.setContext({ context }, clientIdentity);
-    }
-
-}
