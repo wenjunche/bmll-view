@@ -6,7 +6,6 @@ import { Provider } from 'react-redux';
 import { PlotLineElement } from './PlotLineElement'
 import { PlotAreaElement } from './PlotAreaElement'
 import log from 'loglevel';
-import { fin } from 'openfin-adapter/src/mock';
 
 import store, { setInstrumentPackage } from '../store';
 import { ChartViewOptions, getBroadcastChannel, connectChannel, getChartTitle } from '../common';
